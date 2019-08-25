@@ -5,4 +5,4 @@
 pictures
 
 #ignore .pyc files
-*.pyc
+__pycache__
