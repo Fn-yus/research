@@ -1,7 +1,3 @@
-# To add a new cell, type '#%%'
-# To add a new markdown cell, type '#%% [markdown]'
-
-#%%
 import cv2
 import numpy as np
 
@@ -26,9 +22,6 @@ def extract_needle():
 if __name__ == '__main__':
     extract_needle()
     
-
-
-#%%
 
 
 
