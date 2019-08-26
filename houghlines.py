@@ -6,7 +6,7 @@ def hough_lines():
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
     #ret, img_thresh = cv2.threshold(img_gray_denoised, 150, 255, cv2.THRESH_BINARY) #二値化
-    img_thresh = cv2.adaptiveThreshold(img_gray_denoised,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,11,2)
+    img_thresh = cv2.adaptiveThreshold(img_gray_denoised,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
     img_canny = cv2.Canny(img_gray_denoised, 50, 150)
     img_thresh2 = cv2.bitwise_not(img_thresh)
 
