@@ -12,7 +12,6 @@ def hough_lines():
     img_canny = cv2.Canny(img_gray_denoised, 50, 150)    
     img_thresh2 = cv2.bitwise_not(img_thresh)
     img_canny2 = cv2.bitwise_not(img_canny)
-    
 
     #contours, hierarchy = cv2.findContours(img_thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE) #輪郭の点検出
     #for i, contour in enumerate(contours):
@@ -28,10 +27,9 @@ def hough_lines():
     img_canny_diff = cv2.subtract(img_needle_thresh, img_canny)
     cv2.imshow("img_canny_diff.jpg", img_canny_diff)
 
-
     needle_lines = cv2.HoughLines(img_needle_thresh2,1,np.pi,20)
     print(needle_lines)
-    print(len(needle_lines))
+    needle_list = []
     for needle_line in needle_lines:
         for rho,theta in needle_line:
             a = np.cos(theta)
@@ -44,24 +42,10 @@ def hough_lines():
             y2 = int(y0 - 1000*(a))
 
         cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
-        print((x1, y1), (x2, y2))
+        needle_list.append(x0)
 
     img_lines = cv2.HoughLines(img_needle_thresh_diff,1,np.pi,32)
-    print(len(img_lines))
-    for img_line in img_lines:
-        print(img_line)
-        for rho,theta in img_line:
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a*rho
-            y0 = b*rho
-            x1 = int(x0 + 1000*(-b))
-            y1 = int(y0 + 1000*(a))
-            x2 = int(x0 - 1000*(-b))
-            y2 = int(y0 - 1000*(a))
-
-            cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-
+    print_lines(img, img_lines)
 
     cv2.imshow('sample_1_hough.jpg', img)
     #cv2.imshow('sample_1_canny.jpg', img_canny)
@@ -71,6 +55,40 @@ def hough_lines():
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+def print_lines(img, lines):
+    line_list = []
+    for line in lines:
+        for rho,theta in line:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 1000*(-b))
+            y1 = int(y0 + 1000*(a))
+            x2 = int(x0 - 1000*(-b))
+            y2 = int(y0 - 1000*(a))
+
+            #cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+            if line_list == []:
+                line_list.append(rho)
+            else:
+                idx = np.abs(np.asarray(line_list) - x0).argmin()
+                height, width, channels = img.shape[:3]
+                if np.abs(line_list[idx] - rho) <= 10:
+                    x = np.mean([line_list[idx], rho])
+                    line_list.pop(idx)
+                    line_list.append(x)
+                elif width -5 <= rho < width: #影の除去
+                    x0
+                else:
+                    line_list.append(rho)
+
+    for i in line_list:
+        cv2.line(img, (i, 1000), (i, -1000), (0, 255, 0), 1)
+    
+    print(sorted(line_list))
+    print(np.diff(sorted(line_list)))
 
 if __name__ == '__main__':
     hough_lines()
