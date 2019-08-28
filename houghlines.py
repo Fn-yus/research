@@ -12,7 +12,7 @@ def hough_lines():
     img_canny = cv2.Canny(img_gray_denoised, 50, 150)    
     img_thresh2 = cv2.bitwise_not(img_thresh)
     img_canny2 = cv2.bitwise_not(img_canny)
-    cv2.imshow("img_canny.jpg", img_canny2)
+    
 
     #contours, hierarchy = cv2.findContours(img_thresh,cv2.RETR_LIST,cv2.CHAIN_APPROX_NONE) #輪郭の点検出
     #for i, contour in enumerate(contours):
@@ -26,6 +26,7 @@ def hough_lines():
     img_needle_thresh2 = cv2.bitwise_not(img_needle_thresh)
     img_needle_thresh_diff = cv2.subtract(img_needle_thresh, img_thresh)
     img_canny_diff = cv2.subtract(img_needle_thresh, img_canny)
+    cv2.imshow("img_canny_diff.jpg", img_canny_diff)
 
 
     needle_lines = cv2.HoughLines(img_needle_thresh2,1,np.pi,20)
@@ -45,7 +46,7 @@ def hough_lines():
         cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
         print((x1, y1), (x2, y2))
 
-    img_lines = cv2.HoughLinesP(img_canny_diff,1,np.pi,32,10,10)
+    img_lines = cv2.HoughLines(img_needle_thresh_diff,1,np.pi,32)
     print(len(img_lines))
     for img_line in img_lines:
         print(img_line)
@@ -60,7 +61,7 @@ def hough_lines():
             y2 = int(y0 - 1000*(a))
 
             cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-    
+
 
     cv2.imshow('sample_1_hough.jpg', img)
     #cv2.imshow('sample_1_canny.jpg', img_canny)

@@ -5,7 +5,7 @@ def extract_needle():
     img = cv2.imread("pictures/sample_1.jpg") #画像読み込み
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) #BGRからHSVに変換
-    red_lower = np.array([0, 87, 87]) #下限
+    red_lower = np.array([0, 86, 86]) #下限
     red_upper = np.array([30, 255, 255]) #上限
 
     img_mask = cv2.inRange(hsv, red_lower, red_upper) #範囲を指定してマスク画像作成
