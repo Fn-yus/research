@@ -9,6 +9,7 @@ def hough_lines():
     img_canny = cv2.Canny(img_gray_denoised, 50, 150)    
     img_thresh2 = cv2.bitwise_not(img_thresh)
     img_canny2 = cv2.bitwise_not(img_canny)
+    cv2.imwrite('pictures/sample_1_canny.jpg', img_canny2)
 
     img_needle = cv2.imread('pictures/sample_1_needle.jpg')
     img_needle_gray = cv2.cvtColor(img_needle, cv2.COLOR_BGR2GRAY)
@@ -20,7 +21,7 @@ def hough_lines():
     #print(needle_lines)
     needle_list = []
     for needle_line in needle_lines:
-        for rho,theta in needle_line:
+        for rho, _ in needle_line:
             needle_list.append(rho)
     
     needle_line = np.mean(needle_list)
@@ -43,7 +44,7 @@ def hough_lines():
 def print_lines(img, lines):
     line_list = []
     for line in lines:
-        for rho,theta in line:
+        for rho, _ in line:
             if line_list == []:
                 line_list.append(rho)
             else:
