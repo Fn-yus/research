@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 
 def hough_lines():
+    print("Houghlines\n")
+
     img = cv2.imread('pictures/sample_1.jpg')
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
@@ -16,6 +18,9 @@ def hough_lines():
     ret, img_needle_thresh = cv2.threshold(img_needle_gray, 50, 255, cv2.THRESH_BINARY_INV)
     img_needle_thresh2 = cv2.bitwise_not(img_needle_thresh)
     img_needle_thresh_diff = cv2.subtract(img_needle_thresh, img_thresh)
+    img_needle_canny = cv2.Canny(img_needle_gray, 50, 150)
+    img_needle_canny2 = cv2.bitwise_not(img_needle_canny)
+    cv2.imwrite('pictures/sample_1_needle_canny.jpg', img_needle_canny2)
 
     needle_lines = cv2.HoughLines(img_needle_thresh2,1,np.pi,20)
     #print(needle_lines)
@@ -37,9 +42,6 @@ def hough_lines():
     #cv2.imshow('sample_1_thresh.jpg', img_thresh)
     #cv2.imshow('sample_1_needle_thresh.jpg', img_needle_thresh)
     cv2.imshow('sample_1_needle_thresh_diff.jpg', img_needle_thresh_diff)
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
 def print_lines(img, lines):
     line_list = []

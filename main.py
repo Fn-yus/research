@@ -1,8 +1,17 @@
-import needle_extractor as ne
-import houghlines as hl
+import cv2
+import extract_needle 
+import houghlines 
+import identify_scale 
 
-ne.extract_needle()
-hl.hough_lines()
+print("======================")
+extract_needle.extract_needle()
+houghlines.hough_lines()
+print("======================")
+identify_scale.count_black()
+print("======================")
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 
 
