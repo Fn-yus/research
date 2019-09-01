@@ -10,7 +10,3 @@ def main(needle, scale):
     needle_percentage = needle/(scale[scale_upper_index] - scale[scale_lower_index])
     needle_position = (scale_lower_index - 3) + needle_percentage
     return needle_position
-
-
-if __name__ == '__main__':
-   main()
