@@ -1,6 +1,4 @@
 import numpy as np
-import houghlines
-import identify_scale
 
 def main(needle, scale):
     scale_upper_list, = np.where(needle <= scale)
