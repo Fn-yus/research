@@ -1,5 +1,5 @@
 [path]
-long_needle = "C:\\Users\\Yusei\\D58-pictures\\Long-needle\\*"
-long_bubble = "C:\\Users\\Yusei\\D58-pictures\\Long-bubble\\*"
-cross_needle = "C:\\Users\\Yusei\\D58-pictures\Cross-needle\\*"
-cross_bubble = "C:\\Users\\Yusei\\D58-pictures\\Cross-bubble\\*"
+long_needle = "C:\\Users\\Yusei\\D58-pictures\\Long-needle\\*.jpg"
+long_bubble = "C:\\Users\\Yusei\\D58-pictures\\Long-bubble\\*.jpg"
+cross_needle = "C:\\Users\\Yusei\\D58-pictures\Cross-needle\\*.jpg"
+cross_bubble = "C:\\Users\\Yusei\\D58-pictures\\Cross-bubble\\*.jpg"
