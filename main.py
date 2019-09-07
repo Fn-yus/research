@@ -1,5 +1,12 @@
 import cv2
 import numpy as np
+import glob
+import configparser
+
+#必要に応じてpathを書き換えること
+
+def trimming(fname):
+    
 
 def extract_needle():
     img = cv2.imread("pictures/sample_1.jpg") #画像読み込み
@@ -116,23 +123,29 @@ def digitalize(needle, scale):
     return needle_position
 
 if __name__ == "__main__":
-    hough_lines = hough_lines()
-    identify_scale = identify_scale()
-    print("======================")
-    print("Houghlines\n")
-    print("・針の位置：" + str(hough_lines["needle_line"]))
-    print("・直線の検出数：" + str(len(hough_lines["img_lines"])))
-    print("・調整後の直線数：" + str(len(hough_lines["line_list"])))
-    print("・調整後の目盛り座標：" + str(sorted(hough_lines["line_list"])))
-    print("・目盛り幅：" + str(np.diff(sorted(hough_lines["line_list"]), n = 1)))
-    print("・針の座標：" + str(digitalize(hough_lines["needle_line"], sorted(hough_lines["line_list"]))))
-    print("======================")
-    print("Identify Bold Scale Along Rows\n")
-    print("・針の位置：" + str(identify_scale["needle"]))
-    print("・目盛り座標：" + str(identify_scale["scales"]))
-    print("・目盛り幅：" + str(np.diff(identify_scale["scales"], n = 1)))
-    print("・針の座標：" + str(digitalize(identify_scale["needle"], identify_scale["scales"])))
-    print("======================")
+    #config = configparser.ConfigParser()
+    #config.read("config/config.ini")
+    files = glob.glob("C:\\Users\\Yusei\\D58-pictures\\Long-needle\\*.jpg") 
+    
+    for fname in files:
+        img = trimming(fname)
+        hough_lines = hough_lines()
+        identify_scale = identify_scale()
+        print("======================")
+        print("Houghlines\n")
+        print("・針の位置：" + str(hough_lines["needle_line"]))
+        print("・直線の検出数：" + str(len(hough_lines["img_lines"])))
+        print("・調整後の直線数：" + str(len(hough_lines["line_list"])))
+        print("・調整後の目盛り座標：" + str(sorted(hough_lines["line_list"])))
+        print("・目盛り幅：" + str(np.diff(sorted(hough_lines["line_list"]), n = 1)))
+        print("・針の座標：" + str(digitalize(hough_lines["needle_line"], sorted(hough_lines["line_list"]))))
+        print("======================")
+        print("Identify Bold Scale Along Rows\n")
+        print("・針の位置：" + str(identify_scale["needle"]))
+        print("・目盛り座標：" + str(identify_scale["scales"]))
+        print("・目盛り幅：" + str(np.diff(identify_scale["scales"], n = 1)))
+        print("・針の座標：" + str(digitalize(identify_scale["needle"], identify_scale["scales"])))
+        print("======================")
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

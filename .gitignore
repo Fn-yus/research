@@ -7,3 +7,6 @@ __pycache__
 #ignore pictures except sample_1.jpg
 pictures/*
 !pictures/sample_1.jpg
+
+#ignore config file
+config.ini
