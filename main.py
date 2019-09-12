@@ -74,7 +74,7 @@ def hough_lines(img, img_needle):
     for i in line_list:
         cv2.line(img, (i, 1000), (i, -1000), (0, 255, 0), 1)
 
-    cv2.imshow('sample_1_hough.jpg', img)
+    cv2.imwrite('sample_pictures/hough_' + fname, img)
     #cv2.imshow('sample_1_canny.jpg', img_canny)
     #cv2.imshow('sample_1_thresh.jpg', img_thresh)
     #cv2.imshow('sample_1_needle_thresh.jpg', img_needle_thresh)
@@ -95,6 +95,8 @@ def identify_scale(img_canny, img_needle_canny):
             break 
         else:
             continue
+    
+    cv2.line(img_canny, (needle, 1000), (needle, -1000), (0, 0, 255), 1)
 
     #img = np.array(cv2.imread('pictures/sample_1_canny.jpg'))
     #img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
@@ -115,6 +117,11 @@ def identify_scale(img_canny, img_needle_canny):
     for row in scale_list_splited:
         scale = np.mean(row)
         scales.append(scale)
+    
+    for i in scales:
+        cv2.line(img_canny, (i, 1000), (i, -1000), (0, 255, 0), 1)
+
+    cv2.imwrite('samples/identify_scale' + fname, img_canny)
 
     return {"needle":needle, "scales":scales}
 
