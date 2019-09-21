@@ -10,3 +10,6 @@ pictures/*
 
 #ignore config file
 config.ini
+
+# ignore results
+results
