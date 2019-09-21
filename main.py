@@ -3,6 +3,7 @@ import numpy as np
 import glob
 import os
 import configparser
+from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 
 def trimming(fname):
     if "Long-needle" in fname:
@@ -118,7 +119,7 @@ def identify_scale(img_canny, img_needle_canny):
         scales.append(scale)
     
     for i in scales:
-        cv2.line(img_canny, (i, 1000), (i, -1000), (0, 255, 0), 1)
+        cv2.line(img_canny, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
 
     cv2.imwrite('samples/identify_scale' + fname, img_canny)
 
