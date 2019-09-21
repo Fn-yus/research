@@ -96,8 +96,7 @@ def identify_scale(img_canny, img_needle_canny):
         else:
             continue
     
-    cv2.line(img_canny, (needle, 1000), (needle, -1000), (0, 0, 255), 1)
-
+    cv2.line(img_canny, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
     #img = np.array(cv2.imread('pictures/sample_1_canny.jpg'))
     #img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
     ret, img_thresh = cv2.threshold(img_canny, 127, 255, cv2.THRESH_BINARY)
