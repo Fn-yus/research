@@ -13,7 +13,6 @@ def trimming(fname):
         height = img.shape[0]
         width = img.shape[1]
         img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
-        cv2.imwrite('results/pictures/img.jpg', img_trimmed)
         return img_trimmed     
     else:
         pass
@@ -91,10 +90,11 @@ def identify_scale(img, img_needle, fname):
 
     scales = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
 
-    cv2.line(img_thresh_diff, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
+    cv2.line(img, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
     for i in scales:
-        cv2.line(img_thresh_diff, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
+        cv2.line(img, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
 
+    cv2.imwrite('results/pictures/img.jpg', img)
     cv2.imwrite('results/pictures/img_needle_thresh.jpg', img_needle_thresh)
     cv2.imwrite('results/pictures/img_thresh.jpg', img_thresh)
     cv2.imwrite('results/pictures/img_thresh_diff.jpg', img_thresh_diff)
