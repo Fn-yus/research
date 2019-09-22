@@ -143,7 +143,8 @@ def digitalize(needle, scales):
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config/config.ini")
-    files = glob.glob('C:\\Users\\Yusei\\D58-pictures\\Long-needle\\data\\*.jpg') 
+    path = config.get('path', 'long_needle')
+    files = glob.glob(path) 
     
     for fname in tqdm(files):
         new_fname, ext = os.path.splitext(os.path.basename(fname))
