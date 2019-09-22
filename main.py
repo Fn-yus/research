@@ -5,13 +5,14 @@ import os
 import configparser
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from tqdm import tqdm
+import csv
 
 def trimming(fname):
     if "Long-needle" in fname:
         img = cv2.imread(fname)
         height = img.shape[0]
         width = img.shape[1]
-        img_trimmed = cv2.rotate(img[192:288, 67:565], cv2.ROTATE_180)
+        img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
         cv2.imwrite('results/pictures/img.jpg', img_trimmed)
         return img_trimmed     
     else:
@@ -34,7 +35,7 @@ def identify_scale(img, img_needle, fname):
     img_needle_canny2 = cv2.bitwise_not(img_needle_canny)
     ret, img_needle_thresh = cv2.threshold(img_needle_canny2, 127, 255, cv2.THRESH_BINARY)
 
-    needle = []
+    needle = 0
     for row in img_needle_thresh:
         needle_list, = np.where(row == 0)
         if len(needle_list) == 2:
@@ -47,7 +48,7 @@ def identify_scale(img, img_needle, fname):
         else:
             continue
 
-    if len(needle) == 0:
+    if needle == 0:
         for row in img_needle_thresh:
             needle_list, = np.where(row == 0) #色が黒の箇所を抽出
             print(len(needle_list))
@@ -58,15 +59,14 @@ def identify_scale(img, img_needle, fname):
 
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
-    img_canny = cv2.Canny(img_gray_denoised, 50, 150)    
+    img_canny = cv2.Canny(img_gray_denoised, 70, 150)    
     img_canny2 = cv2.bitwise_not(img_canny)
     ret, img_thresh = cv2.threshold(img_canny2, 127, 255, cv2.THRESH_BINARY)
 
     img_thresh_diff = cv2.bitwise_not(cv2.subtract(img_needle_thresh, img_thresh))
-    print(img_thresh_diff)
     if "Long-needle" in fname:
         img_thresh_diff[-1000:1000, 0:20] = 255     #画像左端の映り込み部分を削除
-        img_thresh_diff[-1000:1000, 484:498] = 255      #画像右端の映り込み部分を削除
+        img_thresh_diff[-1000:1000, 484:505] = 255      #画像右端の映り込み部分を削除
 
     scale_list = []
     for row in img_thresh_diff:
@@ -95,9 +95,9 @@ def identify_scale(img, img_needle, fname):
         scales.append(scale)
 
 
-    cv2.line(img_needle_thresh, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
+    cv2.line(img_thresh_diff, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
     for i in scales:
-        cv2.line(img_needle_thresh, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
+        cv2.line(img_thresh_diff, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
 
     
     cv2.imwrite('results/pictures/img_needle_thresh.jpg', img_needle_thresh)
@@ -113,7 +113,7 @@ def digitalize(needle, scales):
 
     if len(scale_upper_list) == 0:      #一番右の目盛りより右側に針がある場合
         scales_diff = np.diff(scales, n = 2)
-        scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[6] + scales[7]     #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
+        scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[5] + scales[6]     #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
 
         scale_lower_index = max(scale_lower_list)
         scale_lower = scales[scale_lower_index]
@@ -128,7 +128,7 @@ def digitalize(needle, scales):
 
         scale_lower_index = -1
         scales_diff = np.diff(scales, n = 2)
-        scale_lower = (2 * scales_diff[0] - scales_diff[1]) - np.diff(scales, n = 1) + scales[0]
+        scale_lower = (2 * scales_diff[0] - scales_diff[1]) - np.diff(scales, n = 1)[0] + scales[0]
 
         needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
         needle_position = (scale_lower_index - 3) + needle_percentage
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         new_fname, ext = os.path.splitext(os.path.basename(fname))
         img = trimming(fname)
         img_needle = extract_needle(img)
-        identifyscale = identify_scale(img, img_needle, new_fname)
+        identifyscale = identify_scale(img, img_needle, fname)
         print("=============================================")
         print(new_fname)
         print("\n")
