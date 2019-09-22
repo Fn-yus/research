@@ -89,23 +89,17 @@ def identify_scale(img, img_needle, fname):
 
     scale_list_splited = np.split(np.array(scale_list), 7)  #目盛りの左右の線ごとにまとめる
 
-    scales = []
-    for row in scale_list_splited:      #目盛りの左右の線の平均を取り、scalesにappend
-        scale = np.mean(row)
-        scales.append(scale)
-
+    scales = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
 
     cv2.line(img_thresh_diff, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
     for i in scales:
         cv2.line(img_thresh_diff, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
 
-    
     cv2.imwrite('results/pictures/img_needle_thresh.jpg', img_needle_thresh)
     cv2.imwrite('results/pictures/img_thresh.jpg', img_thresh)
     cv2.imwrite('results/pictures/img_thresh_diff.jpg', img_thresh_diff)
-    
 
-    return {"needle":needle, "scales":scales}
+    return needle, scales
 
 def digitalize(needle, scales):
     scale_upper_list, = np.where(needle <= scales)
@@ -156,14 +150,11 @@ if __name__ == "__main__":
         img = trimming(fname)
         img_needle = extract_needle(img)
         identifyscale = identify_scale(img, img_needle, fname)
-        print("=============================================")
-        print(new_fname)
-        print("\n")
-        print("・針の位置：" + str(identifyscale["needle"]))
-        print("・目盛り座標：" + str(identifyscale["scales"]))
-        print("・目盛り幅：" + str(np.diff(identifyscale["scales"], n = 1)))
-        print("・針の座標：" + str(digitalize(identifyscale["needle"], identifyscale["scales"])))
-        print("=============================================")
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        #print("=============================================")
+        #print(new_fname)
+        #print("\n")
+        #print("・針の位置：" + str(identifyscale[0]))
+        #print("・目盛り座標：" + str(identifyscale[1]))
+        #print("・目盛り幅：" + str(np.diff(identifyscale[1], n = 1)))
+        #print("・針の座標：" + str(digitalize(identifyscale[0], identifyscale[1])))
+        #print("=============================================")
