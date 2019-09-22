@@ -23,7 +23,7 @@ def extract_needle(img):
     red_lower = np.array([0, 86, 86]) #下限
     red_upper = np.array([30, 255, 255]) #上限
 
-    img_mask = cv2.inRange(hsv, red_lower, red_upper) #範囲を指定してマスク画像作成
+    img_mask = cv2.inRange(hsv, red_lower, red_upper)     #範囲を指定してマスク画像作成
     img_needle = cv2.bitwise_and(img, img, mask=img_mask) #元画像とマスク画像の共通部分を抽出
 
     return img_needle  
