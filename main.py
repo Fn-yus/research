@@ -66,7 +66,7 @@ def identify_scale(img, img_needle, fname):
     img_thresh_diff = cv2.bitwise_not(cv2.subtract(img_needle_thresh, img_thresh))
     if "Long-needle" in fname:
         img_thresh_diff[-1000:1000, 0:20] = 255     #画像左端の映り込み部分を削除
-        img_thresh_diff[-1000:1000, 484:505] = 255      #画像右端の映り込み部分を削除
+        img_thresh_diff[-1000:1000, 484:505] = 255  #画像右端の映り込み部分を削除
 
     scale_list = []
     for row in img_thresh_diff:
@@ -105,9 +105,9 @@ def digitalize(needle, scales):
     scale_upper_list, = np.where(needle <= scales)
     scale_lower_list, = np.where(needle >= scales)
 
-    if len(scale_upper_list) == 0:      #一番右の目盛りより右側に針がある場合
+    if len(scale_upper_list) == 0: #一番右の目盛りより右側に針がある場合
         scales_diff = np.diff(scales, n = 2)
-        scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[5] + scales[6]     #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
+        scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[5] + scales[6] #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
 
         scale_lower_index = max(scale_lower_list)
         scale_lower = scales[scale_lower_index]
@@ -117,7 +117,7 @@ def digitalize(needle, scales):
 
         return needle_position
 
-    elif len(scale_lower_list) == 0:      #一番左の目盛りより左側に針がある場合
+    elif len(scale_lower_list) == 0: #一番左の目盛りより左側に針がある場合
         scale_upper = scales[min(scale_upper_list)]
 
         scale_lower_index = -1
