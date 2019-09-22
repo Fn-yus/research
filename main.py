@@ -3,7 +3,7 @@ import numpy as np
 import glob
 import os
 import configparser
-from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
+from decimal import Decimal
 from tqdm import tqdm
 import csv
 
