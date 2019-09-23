@@ -172,5 +172,4 @@ dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
 with open('results/data/' + dt_now + '.csv', 'w', newline = '') as f:
     writer = csv.writer(f)
     writer.writerows(csv_lists)
-
 print("completed")
