@@ -1,11 +1,12 @@
 import cv2
 import numpy as np
+from decimal import Decimal
+from datetime import datetime
 import glob
 import os
 import configparser
-from decimal import Decimal
-from tqdm import tqdm
 import csv
+from tqdm import tqdm
 
 def trimming(fname):
     if "Long-needle" in fname:
@@ -82,7 +83,7 @@ def identify_scale(img, img_needle, fname):
             black_list, = np.where(row == 0) #色が黒の箇所を抽出
             print(len(black_list))
             print(black_list)
-        print(new_fname)
+        print(fname)
     else:
         pass
 
@@ -147,7 +148,9 @@ if __name__ == "__main__":
     files = glob.glob(path) 
     
     for fname in tqdm(files):
-        new_fname, ext = os.path.splitext(os.path.basename(fname))
+        #new_fname, ext = os.path.splitext(os.path.basename(fname))
+        created_unix_time = os.path.getmtime(fname)
+        created_datetime = datetime.fromtimestamp(created_unix_time)
         img = trimming(fname)
         img_needle = extract_needle(img)
         identifyscale = identify_scale(img, img_needle, fname)
