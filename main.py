@@ -145,7 +145,9 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config/config.ini")
     path = config.get('path', 'long_needle')
-    files = glob.glob(path) 
+    files = glob.glob(path)
+
+    csv_lists = [["Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
     
     for fname in tqdm(files):
         #new_fname, ext = os.path.splitext(os.path.basename(fname))
@@ -154,6 +156,9 @@ if __name__ == "__main__":
         img = trimming(fname)
         img_needle = extract_needle(img)
         identifyscale = identify_scale(img, img_needle, fname)
+        needle_position = digitalize(identifyscale[0], identifyscale[1])
+        csv_list = sum([[created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
+        csv_lists.append(csv_list)
         #print("=============================================")
         #print(new_fname)
         #print("\n")
@@ -162,3 +167,10 @@ if __name__ == "__main__":
         #print("・目盛り幅：" + str(np.diff(identifyscale[1], n = 1)))
         #print("・針の座標：" + str(digitalize(identifyscale[0], identifyscale[1])))
         #print("=============================================")
+
+dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
+with open('results/data/' + dt_now + '.csv', 'w', newline = '') as f:
+    writer = csv.writer(f)
+    writer.writerows(csv_lists)
+
+print("completed")
