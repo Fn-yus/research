@@ -106,45 +106,43 @@ def digitalize(needle, scales):
     if needle in scales: #針が目盛りと完全一致した場合
         needle_position = -3 + scales.index(needle)
     else:
-        pass
-    
-    scale_upper_list, = np.where(needle <= scales)
-    scale_lower_list, = np.where(needle >= scales)
+        scale_upper_list, = np.where(needle <= scales)
+        scale_lower_list, = np.where(needle >= scales)
 
-    if len(scale_upper_list) == 0: #一番右の目盛りより右側に針がある場合
-        scales_diff = np.diff(scales, n = 2)
-        scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[5] + scales[6] #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
+        if len(scale_upper_list) == 0: #一番右の目盛りより右側に針がある場合
+            scales_diff = np.diff(scales, n = 2)
+            scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[5] + scales[6] #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
 
-        scale_lower_index = max(scale_lower_list)
-        scale_lower = scales[scale_lower_index]
+            scale_lower_index = max(scale_lower_list)
+            scale_lower = scales[scale_lower_index]
 
-        needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
-        needle_position = (scale_lower_index - 3) + needle_percentage
+            needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
+            needle_position = (scale_lower_index - 3) + needle_percentage
 
-        return needle_position
+            return needle_position
 
-    elif len(scale_lower_list) == 0: #一番左の目盛りより左側に針がある場合
-        scale_upper = scales[min(scale_upper_list)]
+        elif len(scale_lower_list) == 0: #一番左の目盛りより左側に針がある場合
+            scale_upper = scales[min(scale_upper_list)]
 
-        scale_lower_index = -1
-        scales_diff = np.diff(scales, n = 2)
-        scale_lower = (2 * scales_diff[0] - scales_diff[1]) - np.diff(scales, n = 1)[0] + scales[0]
+            scale_lower_index = -1
+            scales_diff = np.diff(scales, n = 2)
+            scale_lower = (2 * scales_diff[0] - scales_diff[1]) - np.diff(scales, n = 1)[0] + scales[0]
 
-        needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
-        needle_position = (scale_lower_index - 3) + needle_percentage
+            needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
+            needle_position = (scale_lower_index - 3) + needle_percentage
 
-        return needle_position
-    
-    else:
-        scale_upper = scales[min(scale_upper_list)]
+            return needle_position
 
-        scale_lower_index = max(scale_lower_list)
-        scale_lower = scales[scale_lower_index]
+        else:
+            scale_upper = scales[min(scale_upper_list)]
 
-        needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
-        needle_position = (scale_lower_index - 3) + needle_percentage
+            scale_lower_index = max(scale_lower_list)
+            scale_lower = scales[scale_lower_index]
 
-        return needle_position
+            needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
+            needle_position = (scale_lower_index - 3) + needle_percentage
+
+            return needle_position
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
