@@ -39,7 +39,7 @@ def identify_scale(img, img_needle, fname):
     for row in img_needle_thresh:
         needle_list, = np.where(row == 0)
         if len(needle_list) == 2:
-            if needle_list[0] >= 460 and np.diff(needle_list) >= 3: #端の場合
+            if "Long-needle" in fname and needle_list[0] >= 460 and np.diff(needle_list) >= 3: #端の場合
                 needle = np.mean(needle_list)
                 break
             elif np.diff(needle_list) >= 5:
@@ -71,7 +71,7 @@ def identify_scale(img, img_needle, fname):
     scale_list = []
     for row in img_thresh_diff:
         black_list, = np.where(row == 0) #色が黒の箇所を抽出
-        if len(black_list) == 14 and min(np.diff(black_list[0::2])) > 50: #目盛りの縁が14個かつ目盛り間のピクセル距離が50以上
+        if "Long-needle" in fname and len(black_list) == 14 and min(np.diff(black_list[0::2])) > 50: #目盛りの縁が14個かつ目盛り間のピクセル距離が50以上
             scale_list = black_list
             break
         else:
@@ -103,6 +103,11 @@ def identify_scale(img, img_needle, fname):
     return needle, scales
 
 def digitalize(needle, scales):
+    if needle in scales: #針が目盛りと完全一致した場合
+        needle_position = -3 + scales.index(needle)
+    else:
+        pass
+    
     scale_upper_list, = np.where(needle <= scales)
     scale_lower_list, = np.where(needle >= scales)
 
@@ -147,17 +152,17 @@ if __name__ == "__main__":
     path = config.get('path', 'long_needle')
     files = glob.glob(path)
 
-    csv_lists = [["Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
+    csv_lists = [["Time", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
     
     for fname in tqdm(files):
         #new_fname, ext = os.path.splitext(os.path.basename(fname))
         created_unix_time = os.path.getmtime(fname)
-        created_datetime = datetime.fromtimestamp(created_unix_time)
+        created_datetime = datetime.fromtimestamp(created_unix_time).strftime('%H%M%S')
         img = trimming(fname)
         img_needle = extract_needle(img)
         identifyscale = identify_scale(img, img_needle, fname)
         needle_position = digitalize(identifyscale[0], identifyscale[1])
-        csv_list = sum([[created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
+        csv_list = sum([[created_datetime], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
         csv_lists.append(csv_list)
         #print("=============================================")
         #print(new_fname)
@@ -167,9 +172,9 @@ if __name__ == "__main__":
         #print("・目盛り幅：" + str(np.diff(identifyscale[1], n = 1)))
         #print("・針の座標：" + str(digitalize(identifyscale[0], identifyscale[1])))
         #print("=============================================")
-
-dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
-with open('results/data/' + dt_now + '.csv', 'w', newline = '') as f:
-    writer = csv.writer(f)
-    writer.writerows(csv_lists)
-print("completed")
+    
+    dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
+    with open('results/data/' + dt_now + '.csv', 'w', newline = '') as f:
+        writer = csv.writer(f)
+        writer.writerows(csv_lists)
+    print("completed")
