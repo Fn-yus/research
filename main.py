@@ -105,6 +105,7 @@ def identify_scale(img, img_needle, fname):
 def digitalize(needle, scales):
     if needle in scales: #針が目盛りと完全一致した場合
         needle_position = -3 + scales.index(needle)
+        return needle_position
     else:
         scale_upper_list, = np.where(needle <= scales)
         scale_lower_list, = np.where(needle >= scales)
