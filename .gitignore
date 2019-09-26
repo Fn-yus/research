@@ -13,3 +13,6 @@ config.ini
 
 # ignore results
 results
+
+# ignore plot csv file
+plot_data/*.csv

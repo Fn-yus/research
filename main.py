@@ -157,7 +157,6 @@ if __name__ == "__main__":
         #new_fname, ext = os.path.splitext(os.path.basename(fname))
         created_unix_time = os.path.getmtime(fname)
         created_datetime = datetime.fromtimestamp(created_unix_time)
-        print(created_datetime)
         img = trimming(fname)
         img_needle = extract_needle(img)
         identifyscale = identify_scale(img, img_needle, fname)
