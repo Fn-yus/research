@@ -214,8 +214,9 @@ def plot(master_file_path, csv_file_path):
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config/config.ini")
-    path = config.get('path', 'long_needle')
-    files = glob.glob(path)
+    long_needle_path = config.get('path', 'long_needle')
+    master_txt_path = config.get('path', 'master')
+    files = glob.glob(long_needle_path)
 
     csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
     
@@ -244,4 +245,4 @@ if __name__ == "__main__":
         writer = csv.writer(f)
         writer.writerows(csv_lists)
     print("csv exported")
-    plot("C:\\Users\\Yusei\\D58-pictures\\190716.txt", csv_path)
+    plot(master_txt_path, csv_path)

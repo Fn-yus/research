@@ -12,7 +12,8 @@ pictures/*
 config.ini
 
 # ignore results
-results
+results/data/*
+results/pictures/*
 
 # ignore plot csv file
 plot_data/*.csv
