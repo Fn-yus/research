@@ -156,14 +156,14 @@ def plot(master_file_path, csv_file_path):
     end_time = datetime(csv_schedule[row_size,0], csv_schedule[row_size,1], csv_schedule[row_size,2], csv_schedule[row_size,3], csv_schedule[row_size,4], 59)
 
     sorted_csv_data = []
-    for s_index in tqdm(range(csv_schedule.shape[0])):
+    for s_index in range(csv_schedule.shape[0]):
         index = s_index - 1
         target_time = datetime(csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5])
         new_row = [csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5], (target_time - start_time).total_seconds(), csv_data[index,14]]
         sorted_csv_data.append(new_row)
    
     sorted_master_data = []
-    for row in tqdm(master_data): 
+    for row in master_data: 
         row_schedule = row.astype(int)
         target_time = datetime(row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6])
         if start_time <= target_time <= end_time:
@@ -179,7 +179,7 @@ def plot(master_file_path, csv_file_path):
     x3 = []
     y3 = []
 
-    for c_row in tqdm(sorted_csv_data):
+    for c_row in sorted_csv_data:
         for m_row in sorted_master_data:
             if c_row[6] == m_row[6]:
                 x3.append(c_row[7])
