@@ -151,7 +151,7 @@ if __name__ == "__main__":
     path = config.get('path', 'long_needle')
     files = glob.glob(path)
 
-    csv_lists = [["Time", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
+    csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
     
     for fname in tqdm(files):
         #new_fname, ext = os.path.splitext(os.path.basename(fname))
