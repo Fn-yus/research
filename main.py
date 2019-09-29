@@ -112,28 +112,10 @@ def digitalize(needle, scales):
         scale_lower_list, = np.where(needle >= scales)
 
         if len(scale_upper_list) == 0: #一番右の目盛りより右側に針がある場合
-            scales_diff = np.diff(scales, n = 2)
-            scale_upper = (2 * scales_diff[4] - scales_diff[3]) + np.diff(scales, n = 1)[5] + scales[6] #目盛り4と3の差分計算（値はマイナス）し、それをそれぞれに足していく
-
-            scale_lower_index = max(scale_lower_list)
-            scale_lower = scales[scale_lower_index]
-
-            needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
-            needle_position = (scale_lower_index - 3) + needle_percentage
-
-            return needle_position
+            return None
 
         elif len(scale_lower_list) == 0: #一番左の目盛りより左側に針がある場合
-            scale_upper = scales[min(scale_upper_list)]
-
-            scale_lower_index = -1
-            scales_diff = np.diff(scales, n = 2)
-            scale_lower = (2 * scales_diff[0] - scales_diff[1]) - np.diff(scales, n = 1)[0] + scales[0]
-
-            needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
-            needle_position = (scale_lower_index - 3) + needle_percentage
-
-            return needle_position
+            return None
 
         else:
             scale_upper = scales[min(scale_upper_list)]
@@ -205,7 +187,7 @@ def plot(master_file_path, csv_file_path):
 
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
-    ax3.set_title('compare about analog and digital data(r=' + str(r) + ')')
+    ax3.set_title('compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
     ax3.set_ylabel('tilt-long value[arc-sec]')
 
@@ -228,19 +210,12 @@ if __name__ == "__main__":
         img_needle = extract_needle(img)
         identifyscale = identify_scale(img, img_needle, fname)
         needle_position = digitalize(identifyscale[0], identifyscale[1])
-        csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, ], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
-        csv_lists.append(csv_list)
-        #print("=============================================")
-        #print(new_fname)
-        #print("\n")
-        #print("・針の位置：" + str(identifyscale[0]))
-        #print("・目盛り座標：" + str(identifyscale[1]))
-        #print("・目盛り幅：" + str(np.diff(identifyscale[1], n = 1)))
-        #print("・針の座標：" + str(digitalize(identifyscale[0], identifyscale[1])))
-        #print("=============================================")
+        if needle_position != None:
+            csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
+            csv_lists.append(csv_list)
     
     dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
-    csv_path = 'results/data/' + dt_now + '.csv'
+    csv_path = 'results/data/{}.csv'.format(dt_now)
     with open(csv_path, 'w', newline = '') as f:
         writer = csv.writer(f)
         writer.writerows(csv_lists)
