@@ -169,6 +169,10 @@ def plot(master_file_path, csv_file_path):
 
     r = np.corrcoef(np.array(x3), np.array(y3))[0,1]
 
+    X3 = np.array([x3, np.ones(len(x3))])
+    X3 = X3.T 
+    a, b = np.linalg.lstsq(X3, y3, rcond=None)[0]
+
     fig1 = plt.figure()
     fig2 = plt.figure()
     fig3 = plt.figure()
@@ -187,9 +191,11 @@ def plot(master_file_path, csv_file_path):
 
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
-    ax3.set_title('compare about analog and digital data(r={})'.format(r))
+    ax3.plot(x3, (a*x3+b), color="red")
+    ax3.set_title('Compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
     ax3.set_ylabel('tilt-long value[arc-sec]')
+    ax3.legend(["y = {}x + {}".format(a, b)])
 
     plt.show()
 
