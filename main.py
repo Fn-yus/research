@@ -191,7 +191,7 @@ def plot(master_file_path, csv_file_path):
 
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
-    ax3.plot(x3, (a*x3+b), color="red")
+    ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red")
     ax3.set_title('Compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
     ax3.set_ylabel('tilt-long value[arc-sec]')
