@@ -170,7 +170,6 @@ def plot(master_file_path, csv_file_path):
     r = np.corrcoef(np.array(x3), np.array(y3))[0,1]
 
     (a, b, sa, sb)= least_square(np.array(x3), np.array(y3))
-    print(a, b, sa, sb)
 
     fig1 = plt.figure()
     fig2 = plt.figure()
