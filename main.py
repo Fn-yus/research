@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from decimal import Decimal
+from decimal import *
 from datetime import datetime, timedelta
 import glob
 import os
@@ -169,9 +169,8 @@ def plot(master_file_path, csv_file_path):
 
     r = np.corrcoef(np.array(x3), np.array(y3))[0,1]
 
-    X3 = np.array([x3, np.ones(len(x3))])
-    X3 = X3.T 
-    a, b = np.linalg.lstsq(X3, y3, rcond=None)[0]
+    (a, b, sa, sb)= least_square(np.array(x3), np.array(y3))
+    print(a, b, sa, sb)
 
     fig1 = plt.figure()
     fig2 = plt.figure()
@@ -195,9 +194,31 @@ def plot(master_file_path, csv_file_path):
     ax3.set_title('Compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
     ax3.set_ylabel('tilt-long value[arc-sec]')
-    ax3.legend(["y = {}x + {}".format(a, b)])
+    ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
 
     plt.show()
+
+def least_square(x, y):
+    xy = x * y
+    square_x = np.square(x)
+    square_y = np.square(y)
+    N = len(x)
+
+    a = (N * sum(xy) - (sum(x) * sum(y)))/(N * sum(square_x) - (sum(x) ** 2))
+    b = (sum(square_x) * sum(y) - sum(x) * sum(xy))/(N * sum(square_x) - (sum(x) ** 2))
+
+    sy = Decimal(((sum(np.square(a * x + b - y)))/(N - 2)) ** 0.5)
+
+    getcontext().prec = 1
+    getcontext().rounding = ROUND_HALF_UP
+    sa = sy * Decimal(((N/(N * sum(square_x) - (sum(x) ** 2))) ** 0.5))
+    sb = sy * Decimal(((sum(square_x)/(N * sum(square_x) - (sum(x) ** 2))) ** 0.5))
+
+    getcontext().prec = 28
+    a = Decimal(a).quantize(sa)
+    b = Decimal(b).quantize(sb)
+
+    return float(a), float(b), float(sa), float(sb)
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
