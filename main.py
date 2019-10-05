@@ -220,10 +220,10 @@ def least_square(x, y):
     return float(a), float(b), float(sa), float(sb)
 
 if __name__ == "__main__":
-    csv_files = glob.glob('results/data/*.csv')
     config = configparser.ConfigParser()
     config.read("config/config.ini")
     master_txt_path = config.get('path', 'master')
+    csv_files = glob.glob('results/data/*.csv')
 
     if  csv_files == []:
         print("Csv files don't exist. Generating a new csv file...")
