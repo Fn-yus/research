@@ -220,30 +220,39 @@ def least_square(x, y):
     return float(a), float(b), float(sa), float(sb)
 
 if __name__ == "__main__":
+    csv_files = glob.glob('results/data/*.csv')
     config = configparser.ConfigParser()
     config.read("config/config.ini")
-    long_needle_path = config.get('path', 'long_needle')
     master_txt_path = config.get('path', 'master')
-    files = glob.glob(long_needle_path)
 
-    csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
-    
-    for fname in tqdm(files):
-        #new_fname, ext = os.path.splitext(os.path.basename(fname))
-        created_unix_time = os.path.getmtime(fname)
-        created_datetime = datetime.fromtimestamp(created_unix_time)
-        img = trimming(fname)
-        img_needle = extract_needle(img)
-        identifyscale = identify_scale(img, img_needle, fname)
-        needle_position = digitalize(identifyscale[0], identifyscale[1])
-        if needle_position != None:
-            csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
-            csv_lists.append(csv_list)
-    
-    dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
-    csv_path = 'results/data/{}.csv'.format(dt_now)
-    with open(csv_path, 'w', newline = '') as f:
-        writer = csv.writer(f)
-        writer.writerows(csv_lists)
-    print("csv exported")
-    plot(master_txt_path, csv_path)
+    if  csv_files == []:
+        print("Csv files don't exist. Generating a new csv file...")
+        long_needle_path = config.get('path', 'long_needle')
+        files = glob.glob(long_needle_path)
+
+        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
+        
+        for fname in tqdm(files):
+            #new_fname, ext = os.path.splitext(os.path.basename(fname))
+            created_unix_time = os.path.getmtime(fname)
+            created_datetime = datetime.fromtimestamp(created_unix_time)
+            img = trimming(fname)
+            img_needle = extract_needle(img)
+            identifyscale = identify_scale(img, img_needle, fname)
+            needle_position = digitalize(identifyscale[0], identifyscale[1])
+            if needle_position != None:
+                csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
+                csv_lists.append(csv_list)
+        
+        dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
+        csv_path = 'results/data/{}.csv'.format(dt_now)
+        with open(csv_path, 'w', newline = '') as f:
+            writer = csv.writer(f)
+            writer.writerows(csv_lists)
+        print("Csv file exported.")
+        plot(master_txt_path, csv_path)
+
+    else:
+        print("Csv files already exist. Plotting graph...")
+        csv_path = csv_files[-1]
+        plot(master_txt_path, csv_path)
