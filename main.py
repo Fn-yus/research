@@ -15,6 +15,7 @@ def trimming(fname):
         height = img.shape[0]
         width = img.shape[1]
         img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
+        cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)
         return img_trimmed     
     else:
         pass
@@ -27,6 +28,7 @@ def extract_needle(img):
     img_mask = cv2.inRange(hsv, red_lower, red_upper)     #範囲を指定してマスク画像作成
     img_needle = cv2.bitwise_and(img, img, mask=img_mask) #元画像とマスク画像の共通部分を抽出
 
+    cv2.imwrite('results/pictures/img_needle.jpg', img_needle)
     return img_needle  
 
 def identify_scale(img, img_needle, fname):
@@ -177,22 +179,22 @@ def plot(master_file_path, csv_file_path):
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
-    ax1.set_title('Time Change for tilt-long analog data')
-    ax1.set_xlabel('t[s]')
+    # ax1.set_title('Time Change for tilt-long analog data')
+    ax1.set_xlabel('t [s]')
     ax1.set_ylabel('tilt-long value')
 
     ax2 = fig2.add_subplot(1, 1, 1)
     ax2.scatter(x2, y2)
-    ax2.set_title('Time Change for tilt-long digital data')
-    ax2.set_xlabel('t[s]')
+    # ax2.set_title('Time Change for tilt-long digital data')
+    ax2.set_xlabel('t [s]')
     ax2.set_ylabel('tilt-long value[arc-sec]')
 
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
     ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red")
-    ax3.set_title('Compare about analog and digital data(r={})'.format(r))
+    # ax3.set_title('Compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
-    ax3.set_ylabel('tilt-long value[arc-sec]')
+    ax3.set_ylabel('tilt-long value [arc-sec]')
     ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
 
     plt.show()
