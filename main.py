@@ -155,7 +155,7 @@ def plot(master_file_path, csv_file_path):
             sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
 
         experiment_start_time = datetime(2019, 7, 16, 13, 21, 00)
-        long_end_time = datetime(2019, 7, 16, 14, 23, 00)
+        long_end_time = datetime(2019, 7, 16, 13, 58, 00)
         cross_start_time = datetime(2019, 7, 16, 15, 16, 00)
         experiment_end_time = datetime(2019, 7, 16, 15, 50, 00)
         if experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
