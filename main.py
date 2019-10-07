@@ -147,21 +147,32 @@ def plot(master_file_path, csv_file_path):
         sorted_csv_data.append(new_row)
    
     sorted_master_data = []
+    experiment_data = []
     for row in master_data: 
         row_schedule = row.astype(int)
         target_time = datetime(row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6])
         if start_time <= target_time <= end_time:
-            if row[8] == 0:
-                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), 0])
-            else:
-                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
-    
+            sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
+
+        experiment_start_time = datetime(2019, 7, 16, 13, 21, 00)
+        long_end_time = datetime(2019, 7, 16, 14, 23, 00)
+        cross_start_time = datetime(2019, 7, 16, 15, 16, 00)
+        experiment_end_time = datetime(2019, 7, 16, 15, 50, 00)
+        if experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
+            experiment_data.append([(target_time - experiment_start_time).total_seconds(), row[7], row[8]/15.379, row[9]/17.107])
+        elif long_end_time <= target_time <= cross_start_time:
+            experiment_data.append([(target_time - experiment_start_time).total_seconds(), None, None, None])
+
     x1 = np.array(sorted_csv_data)[:,6]
     x2 = np.array(sorted_master_data)[:,6]
     y1 = np.array(sorted_csv_data)[:,7]
     y2 = np.array(sorted_master_data)[:,7]
     x3 = []
     y3 = []
+    x4 = np.array(experiment_data)[:,0]
+    y4_1 = np.array(experiment_data)[:,1]
+    y4_2 = np.array(experiment_data)[:,2]
+    y4_3 = np.array(experiment_data)[:,3]
 
     for c_row in sorted_csv_data:
         for m_row in sorted_master_data:
@@ -176,18 +187,22 @@ def plot(master_file_path, csv_file_path):
     fig1 = plt.figure()
     fig2 = plt.figure()
     fig3 = plt.figure()
+    fig4 = plt.figure()
+    fig5 = plt.figure()
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
     # ax1.set_title('Time Change for tilt-long analog data')
     ax1.set_xlabel('t [s]')
     ax1.set_ylabel('tilt-long value')
+    ax1.grid(axis='y')
 
     ax2 = fig2.add_subplot(1, 1, 1)
     ax2.scatter(x2, y2)
     # ax2.set_title('Time Change for tilt-long digital data')
     ax2.set_xlabel('t [s]')
     ax2.set_ylabel('tilt-long value[arc-sec]')
+    ax2.grid(axis='y')
 
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
@@ -195,7 +210,22 @@ def plot(master_file_path, csv_file_path):
     # ax3.set_title('Compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
     ax3.set_ylabel('tilt-long value [arc-sec]')
+    ax3.grid(axis='both')
     ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
+
+    ax4 = fig4.add_subplot(1, 1, 1)
+    ax4.plot(x4, y4_1)
+    ax4.set_xlabel('t [s]')
+    ax4.set_ylabel('Gravity [mGal]')
+    ax4.grid(axis='y')
+
+    ax5 = fig5.add_subplot(1, 1, 1)
+    ax5.plot(x4, y4_2)
+    ax5.plot(x4, y4_3)
+    ax5.set_xlabel('t [s]')
+    ax5.set_ylabel('tilt value [arc-sec]')
+    ax5.grid(axis='y')
+    ax5.legend(['tilt-long', 'tilt-cross'])
 
     plt.show()
 
