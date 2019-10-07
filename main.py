@@ -188,7 +188,6 @@ def plot(master_file_path, csv_file_path):
     fig2 = plt.figure()
     fig3 = plt.figure()
     fig4 = plt.figure()
-    fig5 = plt.figure()
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
@@ -213,13 +212,12 @@ def plot(master_file_path, csv_file_path):
     ax3.grid(axis='both')
     ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
 
-    ax4 = fig4.add_subplot(1, 1, 1)
+    ax4 = fig4.add_subplot(2, 1, 1)
     ax4.plot(x4, y4_1)
-    ax4.set_xlabel('t [s]')
     ax4.set_ylabel('Gravity [mGal]')
     ax4.grid(axis='y')
 
-    ax5 = fig5.add_subplot(1, 1, 1)
+    ax5 = fig4.add_subplot(2, 1, 2)
     ax5.plot(x4, y4_2)
     ax5.plot(x4, y4_3)
     ax5.set_xlabel('t [s]')
