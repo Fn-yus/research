@@ -38,18 +38,20 @@ def identify_scale(img, img_needle, fname):
     img_needle_canny2 = cv2.bitwise_not(img_needle_canny)
     ret, img_needle_thresh = cv2.threshold(img_needle_canny2, 127, 255, cv2.THRESH_BINARY)
 
-    needle = 0
+    needle = []
     for row in img_needle_thresh:
         needle_list, = np.where(row == 0)
         if len(needle_list) == 2:
             if "Long-needle" in fname and needle_list[0] >= 460 and np.diff(needle_list) >= 3: #端の場合
-                needle = np.mean(needle_list)
+                needle.append(np.mean(needle_list))
                 break
             elif np.diff(needle_list) >= 5:
-                needle = np.mean(needle_list)
+                needle.append(np.mean(needle_list))
                 break
         else:
             continue
+    
+    needle = np.mean(np.array(needle))
 
     if needle == 0:
         for row in img_needle_thresh:
@@ -75,10 +77,9 @@ def identify_scale(img, img_needle, fname):
     for row in img_thresh_diff:
         black_list, = np.where(row == 0) #色が黒の箇所を抽出
         if "Long-needle" in fname and len(black_list) == 14 and min(np.diff(black_list[0::2])) > 50: #目盛りの縁が14個かつ目盛り間のピクセル距離が50以上
-            scale_list = black_list
-            break
-        else:
-            continue
+            scale_list.append(black_list)
+    
+    scale_list = np.mean(np.array(scale_list), axis=0)
     
     #うまくいけばここはpass
     if len(scale_list) == 0:
@@ -191,14 +192,14 @@ def plot(master_file_path, csv_file_path):
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
-    # ax1.set_title('Time Change for tilt-long analog data')
+    ax1.set_title('Time Change for tilt-long analog data')
     ax1.set_xlabel('t [s]')
     ax1.set_ylabel('tilt-long value')
     ax1.grid(axis='y')
 
     ax2 = fig2.add_subplot(1, 1, 1)
     ax2.scatter(x2, y2)
-    # ax2.set_title('Time Change for tilt-long digital data')
+    ax2.set_title('Time Change for tilt-long digital data')
     ax2.set_xlabel('t [s]')
     ax2.set_ylabel('tilt-long value[arc-sec]')
     ax2.grid(axis='y')
@@ -206,7 +207,7 @@ def plot(master_file_path, csv_file_path):
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
     ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red")
-    # ax3.set_title('Compare about analog and digital data(r={})'.format(r))
+    ax3.set_title('Compare about analog and digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-long value')
     ax3.set_ylabel('tilt-long value [arc-sec]')
     ax3.grid(axis='both')
