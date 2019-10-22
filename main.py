@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from decimal import *
 from datetime import datetime, timedelta
+from time import sleep
 import glob
 import os
 import configparser
@@ -10,22 +11,27 @@ import csv
 from tqdm import tqdm
 
 def trimming(fname):
-    if "Long-needle" in fname:
         img = cv2.imread(fname)
         height = img.shape[0]
         width = img.shape[1]
-        img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
-        cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)
-        return img_trimmed     
-    else:
-        pass
+        if "long-needle" in fname.lower():
+            img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
+            cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)
+            return img_trimmed
+        elif "cross-needle" in fname.lower():
+            img_trimmed = img[192:288, 90:535]            
+            cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)     
+            return img_trimmed
+        else:
+            pass
 
-def extract_needle(img):
+def extract_needle(img, fname):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) #BGRからHSVに変換
-    red_lower = np.array([0, 86, 86]) #下限
-    red_upper = np.array([30, 255, 255]) #上限
 
-    img_mask = cv2.inRange(hsv, red_lower, red_upper)     #範囲を指定してマスク画像作成
+    mask1 = cv2.inRange(hsv, (0, 80, 86), (30, 255, 255))
+    mask2 = cv2.inRange(hsv, (150, 30, 86), (179, 255, 255))
+
+    img_mask = cv2.bitwise_or(mask1, mask2) #範囲を指定してマスク画像作成
     img_needle = cv2.bitwise_and(img, img, mask=img_mask) #元画像とマスク画像の共通部分を抽出
 
     cv2.imwrite('results/pictures/img_needle.jpg', img_needle)
@@ -35,6 +41,7 @@ def identify_scale(img, img_needle, fname):
     img_needle_gray = cv2.cvtColor(img_needle, cv2.COLOR_BGR2GRAY)
     img_needle_denoised = cv2.fastNlMeansDenoising(img_needle_gray)
     img_needle_canny = cv2.Canny(img_needle_denoised, 50, 150)
+
     img_needle_canny2 = cv2.bitwise_not(img_needle_canny)
     ret, img_needle_thresh = cv2.threshold(img_needle_canny2, 127, 255, cv2.THRESH_BINARY)
 
@@ -42,12 +49,21 @@ def identify_scale(img, img_needle, fname):
     for row in img_needle_thresh:
         needle_list, = np.where(row == 0)
         if len(needle_list) == 2:
-            if "Long-needle" in fname and needle_list[0] >= 460 and np.diff(needle_list) >= 3: #端の場合
-                needle.append(np.mean(needle_list))
-                break
-            elif np.diff(needle_list) >= 5:
-                needle.append(np.mean(needle_list))
-                break
+            if "long-needle" in fname.lower():
+                if needle_list[0] >= 460 and np.diff(needle_list) >= 3: #端の場合
+                    needle.append(np.mean(needle_list))
+                    break
+                elif np.diff(needle_list) >= 5:
+                    needle.append(np.mean(needle_list))
+                    break
+            if "cross-needle" in fname.lower():
+                if needle_list[0] >= 420 and np.diff(needle_list) >= 3: #端の場合
+                    needle.append(np.mean(needle_list))
+                    break
+                elif np.diff(needle_list) >= 5:
+                    needle.append(np.mean(needle_list))
+                    break
+
         else:
             continue
     
@@ -64,26 +80,27 @@ def identify_scale(img, img_needle, fname):
 
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
-    img_canny = cv2.Canny(img_gray_denoised, 70, 150)    
+    img_canny = cv2.Canny(img_gray_denoised, 70, 150)
     img_canny2 = cv2.bitwise_not(img_canny)
     ret, img_thresh = cv2.threshold(img_canny2, 127, 255, cv2.THRESH_BINARY)
 
-    img_thresh_diff = cv2.bitwise_not(cv2.subtract(img_needle_thresh, img_thresh))
-    if "Long-needle" in fname:
-        img_thresh_diff[-1000:1000, 0:20] = 255     #画像左端の映り込み部分を削除
-        img_thresh_diff[-1000:1000, 484:505] = 255  #画像右端の映り込み部分を削除
+    #img_thresh_diff = cv2.bitwise_not(cv2.subtract(img_needle_thresh, img_thresh))
+    if "long-needle" in fname.lower():
+        img_thresh[-1000:1000, 0:20] = 255     #画像左端の映り込み部分を削除
+        img_thresh[-1000:1000, 484:505] = 255  #画像右端の映り込み部分を削除
+    elif "cross-needle" in fname.lower():
+        img_thresh[-1000:1000, 0:15] = 255     #画像左端の影映り込み部分を削除
 
     scale_list = []
-    for row in img_thresh_diff:
+    for row in img_thresh:
         black_list, = np.where(row == 0) #色が黒の箇所を抽出
-        if "Long-needle" in fname and len(black_list) == 14 and min(np.diff(black_list[0::2])) > 50: #目盛りの縁が14個かつ目盛り間のピクセル距離が50以上
-            scale_list.append(black_list)
-    
-    scale_list = np.mean(np.array(scale_list), axis=0)
+        if "needle" in fname.lower():
+            if len(black_list) == 14 and min(np.diff(black_list[0::2])) > 50: #目盛りの縁が14個かつ目盛り間のピクセル距離が50以上
+                scale_list.append(black_list)
     
     #うまくいけばここはpass
     if len(scale_list) == 0:
-        for row in img_thresh_diff:
+        for row in img_thresh:
             black_list, = np.where(row == 0) #色が黒の箇所を抽出
             print(len(black_list))
             print(black_list)
@@ -91,8 +108,8 @@ def identify_scale(img, img_needle, fname):
     else:
         pass
 
+    scale_list = np.mean(np.array(scale_list), axis=0)  #条件に一致する線の平均をリストに
     scale_list_splited = np.split(np.array(scale_list), 7)  #目盛りの左右の線ごとにまとめる
-
     scales = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
 
     cv2.line(img, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
@@ -102,7 +119,6 @@ def identify_scale(img, img_needle, fname):
     cv2.imwrite('results/pictures/img.jpg', img)
     cv2.imwrite('results/pictures/img_needle_thresh.jpg', img_needle_thresh)
     cv2.imwrite('results/pictures/img_thresh.jpg', img_thresh)
-    cv2.imwrite('results/pictures/img_thresh_diff.jpg', img_thresh_diff)
 
     return needle, scales
 
@@ -131,7 +147,7 @@ def digitalize(needle, scales):
 
             return needle_position
 
-def plot(master_file_path, csv_file_path):
+def plot(master_file_path, csv_file_path, target):
     master_data = np.loadtxt(master_file_path, encoding='utf-8')
     csv_data = np.loadtxt(csv_file_path, delimiter=',', skiprows=1, encoding='utf-8')
 
@@ -153,7 +169,10 @@ def plot(master_file_path, csv_file_path):
         row_schedule = row.astype(int)
         target_time = datetime(row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6])
         if start_time <= target_time <= end_time:
-            sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
+            if target.lower() == "long-needle":
+                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
+            elif target.lower() == "cross-needle":
+                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[9]/17.107])
 
         experiment_start_time = datetime(2019, 7, 16, 13, 21, 00)
         long_end_time = datetime(2019, 7, 16, 13, 58, 00)
@@ -251,24 +270,35 @@ def least_square(x, y):
     return float(a), float(b), float(sa), float(sb)
 
 if __name__ == "__main__":
+    target = None
+    while True:
+        target = input("解析する画像の種類を以下から選択し入力してください\n[long-needle, cross-needle]：")
+        if target.lower() == "long-needle" or target.lower() == "cross-needle":
+            sleep(0.3)
+            print("ok\n")
+            break
+        else:
+            sleep(0.3)
+            print("\n無効な値です\n")
+
     config = configparser.ConfigParser()
     config.read("config/config.ini")
     master_txt_path = config.get('path', 'master')
-    csv_files = glob.glob('results/data/*.csv')
+    target_path = config.get('path', target)
+    target_files = glob.glob(target_path)
+    csv_files = glob.glob('results/data/{}/*.csv'.format(target))
 
     if  csv_files == []:
-        print("Csv files don't exist. Generating a new csv file...")
-        long_needle_path = config.get('path', 'long_needle')
-        files = glob.glob(long_needle_path)
+        print("画像を解析しています...")
 
         csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
         
-        for fname in tqdm(files):
+        for fname in tqdm(target_files):
             #new_fname, ext = os.path.splitext(os.path.basename(fname))
             created_unix_time = os.path.getmtime(fname)
             created_datetime = datetime.fromtimestamp(created_unix_time)
             img = trimming(fname)
-            img_needle = extract_needle(img)
+            img_needle = extract_needle(img, fname)
             identifyscale = identify_scale(img, img_needle, fname)
             needle_position = digitalize(identifyscale[0], identifyscale[1])
             if needle_position != None:
@@ -276,14 +306,14 @@ if __name__ == "__main__":
                 csv_lists.append(csv_list)
         
         dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
-        csv_path = 'results/data/{}.csv'.format(dt_now)
+        csv_path = 'results/data/{}/{}.csv'.format(target, dt_now)
         with open(csv_path, 'w', newline = '') as f:
             writer = csv.writer(f)
             writer.writerows(csv_lists)
-        print("Csv file exported.")
-        plot(master_txt_path, csv_path)
+        print("\ncsvファイルが作成されました\nグラフを作成しています...")
+        plot(master_txt_path, csv_path, target)
 
     else:
-        print("Csv files already exist. Plotting graph...")
+        print("csvファイルが既に存在しています\nグラフを作成しています...")
         csv_path = csv_files[-1]
-        plot(master_txt_path, csv_path)
+        plot(master_txt_path, csv_path, target)

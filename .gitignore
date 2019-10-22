@@ -12,7 +12,8 @@ pictures/*
 config.ini
 
 # ignore results
-results/data/*
+results/data/long-needle/*
+results/data/cross-needle/*
 results/pictures/*
 
 # ignore plot csv file
