@@ -28,6 +28,14 @@ def trimming(fname):
 def extract_needle(img, fname):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) #BGRからHSVに変換
 
+    if "cross-needle" in fname:
+        gamma = 0.8
+        lookuptable = np.zeros((256,1),dtype = 'uint8')
+        for i in range(256):
+            lookuptable[i][0] = 255 * (float(i) / 255) ** (1.0 / gamma)
+
+        hsv = cv2.LUT(hsv, lookuptable)
+
     mask1 = cv2.inRange(hsv, (0, 80, 86), (30, 255, 255))
     mask2 = cv2.inRange(hsv, (150, 30, 86), (179, 255, 255))
 
@@ -272,9 +280,19 @@ def least_square(x, y):
 if __name__ == "__main__":
     target = None
     while True:
-        target = input("解析する画像の種類を以下から選択し入力してください\n[long-needle, cross-needle]：")
+        target = input("解析する画像の種類を以下から選択し入力してください\n[1.long-needle, 2.cross-needle]：")
         if target.lower() == "long-needle" or target.lower() == "cross-needle":
             sleep(0.3)
+            print("ok\n")
+            break
+        elif target == "1":
+            sleep(0.3)
+            target = "long-needle"
+            print("ok\n")
+            break
+        elif target == "2":
+            sleep(0.3)
+            target = "cross-needle"
             print("ok\n")
             break
         else:
