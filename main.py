@@ -12,8 +12,6 @@ from tqdm import tqdm
 
 def trimming(fname):
         img = cv2.imread(fname)
-        height = img.shape[0]
-        width = img.shape[1]
         if "long-needle" in fname.lower():
             img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
             cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)
@@ -36,10 +34,10 @@ def extract_needle(img, fname):
 
         hsv = cv2.LUT(hsv, lookuptable)
 
-    mask1 = cv2.inRange(hsv, (0, 80, 86), (30, 255, 255))
-    mask2 = cv2.inRange(hsv, (150, 30, 86), (179, 255, 255))
+    mask1 = cv2.inRange(hsv, (0, 80, 86), (30, 255, 255))     #赤～黄色に近い赤
+    mask2 = cv2.inRange(hsv, (150, 30, 86), (179, 255, 255))  #紫に近い赤～赤
 
-    img_mask = cv2.bitwise_or(mask1, mask2) #範囲を指定してマスク画像作成
+    img_mask = cv2.bitwise_or(mask1, mask2)               #範囲を指定してマスク画像作成
     img_needle = cv2.bitwise_and(img, img, mask=img_mask) #元画像とマスク画像の共通部分を抽出
 
     cv2.imwrite('results/pictures/img_needle.jpg', img_needle)
@@ -57,15 +55,16 @@ def identify_scale(img, img_needle, fname):
     for row in img_needle_thresh:
         needle_list, = np.where(row == 0)
         if len(needle_list) == 2:
+            width = img.shape[1]
             if "long-needle" in fname.lower():
-                if needle_list[0] >= 460 and np.diff(needle_list) >= 3: #端の場合
+                if needle_list[0] >= width - 45 and np.diff(needle_list) >= 3: #端の場合
                     needle.append(np.mean(needle_list))
                     break
                 elif np.diff(needle_list) >= 5:
                     needle.append(np.mean(needle_list))
                     break
             if "cross-needle" in fname.lower():
-                if needle_list[0] >= 420 and np.diff(needle_list) >= 3: #端の場合
+                if needle_list[0] >= width - 25 and np.diff(needle_list) >= 3: #端の場合
                     needle.append(np.mean(needle_list))
                     break
                 elif np.diff(needle_list) >= 5:
@@ -115,7 +114,7 @@ def identify_scale(img, img_needle, fname):
     else:
         pass
 
-    scale_list = np.mean(np.array(scale_list), axis=0)  #条件に一致する線の平均をリストに
+    scale_list = np.mean(np.array(scale_list), axis=0)      #条件に一致する線の平均をリストに
     scale_list_splited = np.split(np.array(scale_list), 7)  #目盛りの左右の線ごとにまとめる
     scales = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
 
@@ -137,7 +136,7 @@ def digitalize(needle, scales):
         scale_upper_list, = np.where(needle <= scales)
         scale_lower_list, = np.where(needle >= scales)
 
-        if len(scale_upper_list) == 0: #一番右の目盛りより右側に針がある場合
+        if len(scale_upper_list) == 0:   #一番右の目盛りより右側に針がある場合
             return None
 
         elif len(scale_lower_list) == 0: #一番左の目盛りより左側に針がある場合
@@ -185,7 +184,7 @@ def plot(master_file_path, csv_file_path, target):
         long_end_time = datetime(2019, 7, 16, 13, 58, 00)
         cross_start_time = datetime(2019, 7, 16, 15, 16, 00)
         experiment_end_time = datetime(2019, 7, 16, 15, 50, 00)
-        if experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
+        elif experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
             experiment_data.append([(target_time - experiment_start_time).total_seconds(), row[7], row[8]/15.379, row[9]/17.107])
         elif long_end_time <= target_time <= cross_start_time:
             experiment_data.append([(target_time - experiment_start_time).total_seconds(), None, None, None])
@@ -211,6 +210,9 @@ def plot(master_file_path, csv_file_path, target):
 
     (a, b, sa, sb)= least_square(np.array(x3), np.array(y3))
 
+    graph_target = target.replace("-", "_")        #返り値例 "long_needle" 
+    target_sort = target.replace(target[-7:], "")  #返り値は "long" か "cross"
+
     fig1 = plt.figure()
     fig2 = plt.figure()
     fig3 = plt.figure()
@@ -218,24 +220,24 @@ def plot(master_file_path, csv_file_path, target):
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
-    ax1.set_title('Time Change for tilt-long analog data')
+    ax1.set_title('tilt-{} analog data'.format(graph_target))
     ax1.set_xlabel('t [s]')
-    ax1.set_ylabel('tilt-long value')
+    ax1.set_ylabel('tilt-{} value'.format(graph_target))
     ax1.grid(axis='y')
 
     ax2 = fig2.add_subplot(1, 1, 1)
     ax2.scatter(x2, y2)
-    ax2.set_title('Time Change for tilt-long digital data')
+    ax2.set_title('tilt-{} digital data'.format(target_sort))
     ax2.set_xlabel('t [s]')
-    ax2.set_ylabel('tilt-long value[arc-sec]')
+    ax2.set_ylabel('tilt-{} value[arc-sec]'.format(target_sort))
     ax2.grid(axis='y')
 
     ax3 = fig3.add_subplot(1, 1, 1)
     ax3.scatter(np.array(x3), np.array(y3))
     ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red")
     ax3.set_title('Compare about analog and digital data(r={})'.format(r))
-    ax3.set_xlabel('tilt-long value')
-    ax3.set_ylabel('tilt-long value [arc-sec]')
+    ax3.set_xlabel('tilt-{} value'.format(graph_target))
+    ax3.set_ylabel('tilt-{} value [arc-sec]'.format(target_sort))
     ax3.grid(axis='both')
     ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
 
