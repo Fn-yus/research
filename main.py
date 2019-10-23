@@ -92,7 +92,6 @@ def identify_scale(img, img_needle, fname):
     img_canny2 = cv2.bitwise_not(img_canny)
     ret, img_thresh = cv2.threshold(img_canny2, 127, 255, cv2.THRESH_BINARY)
 
-    #img_thresh_diff = cv2.bitwise_not(cv2.subtract(img_needle_thresh, img_thresh))
     if "long-needle" in fname.lower():
         img_thresh[-1000:1000, 0:20] = 255     #画像左端の映り込み部分を削除
         img_thresh[-1000:1000, 484:505] = 255  #画像右端の映り込み部分を削除
