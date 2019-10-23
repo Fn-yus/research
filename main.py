@@ -184,7 +184,7 @@ def plot(master_file_path, csv_file_path, target):
         long_end_time = datetime(2019, 7, 16, 13, 58, 00)
         cross_start_time = datetime(2019, 7, 16, 15, 16, 00)
         experiment_end_time = datetime(2019, 7, 16, 15, 50, 00)
-        elif experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
+        if experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
             experiment_data.append([(target_time - experiment_start_time).total_seconds(), row[7], row[8]/15.379, row[9]/17.107])
         elif long_end_time <= target_time <= cross_start_time:
             experiment_data.append([(target_time - experiment_start_time).total_seconds(), None, None, None])
