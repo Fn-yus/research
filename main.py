@@ -320,7 +320,7 @@ if __name__ == "__main__":
             img_needle = extract_needle(img, fname)
             identifyscale = identify_scale(img, img_needle, fname)
             needle_position = digitalize(identifyscale[0], identifyscale[1])
-            if needle_position != None:
+            if needle_position != None and created_datetime.second >= 10:
                 csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
                 csv_lists.append(csv_list)
         
