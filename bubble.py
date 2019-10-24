@@ -20,7 +20,7 @@ def trimming(fname):
 def identify_scale(img, fname):
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
-    img_canny = cv2.Canny(img_gray_denoised, 280, 330)
+    img_canny = cv2.Canny(img_gray_denoised, 280, 330)  #要調整
     img_canny2 = cv2.bitwise_not(img_canny)
     ret, img_thresh = cv2.threshold(img_canny2, 127, 255, cv2.THRESH_BINARY)
 
