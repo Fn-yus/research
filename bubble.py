@@ -77,22 +77,33 @@ def identify_scale(img, fname):
 
     return scales, img_gray_denoised
 
-def identify_bubble(fname, img):
+def identify_bubble(fname, img_origin, img):
     ret, img_bubble_thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     img_bubble_thresh_canny = cv2.Canny(img_bubble_thresh, 0, 100)
-    img_bubble_canny = cv2.Canny(img, 450, 550)
+    img_bubble_canny = cv2.Canny(img, 250, 550)
     cv2.imwrite('img_bubble_thresh.jpg', img_bubble_thresh)
     cv2.imwrite('img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
     cv2.imwrite('img_bubble_canny.jpg', img_bubble_canny)
 
-    contours, hierarchy = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    img_contour = cv2.drawContours(img, contours, -1, (0, 255, 0), 3)
-    print(contours)
-    #for cnt in contours:
-    #    ellipse = cv2.fitEllipse(cnt)
-    #    img_bubble_canny = cv2.ellipse(img, ellipse, (0,255,0), 2)
-    #    cv2.imwrite('img_ellipse.jpg', img_bubble_canny)
-    cv2.imwrite('img_bubble_canny_after.jpg', img_contour)
+    '''
+    基準の画像で気泡を特定
+    '''
+
+    contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    # print(contours)
+    with open('contours.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(contours)
+    for cnt in contours:
+        if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
+            print(len(cnt))
+            (x,y), (MA,ma), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
+            print(angle)
+            # print(ellipse)
+            if 80 < angle < 100 and MA >= 10 and ma >= 10: #楕円の向きを絞り,直線を近似しているものは排除する
+                print([x, y, MA, ma])
+                img_bubble_canny = cv2.ellipse(img_origin, ((x,y),(MA,ma),angle), (255,0,0), 1)
+                cv2.imwrite('img_ellipse.jpg', img_bubble_canny)
 
 
 
@@ -102,16 +113,16 @@ if __name__ == "__main__":
     target_path = config.get('path', 'long-bubble')
     target_files = glob.glob(target_path)
     csv_lists = []
-    for fname in target_files: #決め打ち
+    for fname in [target_files[0]]: #決め打ち
         print(fname)
         img = trimming(fname)
         identify_scale_list = identify_scale(img, fname)
         scales = identify_scale_list[0]
-        identify_bubble(fname, identify_scale_list[1])
+        identify_bubble(fname, img, identify_scale_list[1])
         csv_list = sum([[fname], scales], []) #平坦化している
         csv_lists.append(csv_list)
 
-    with open('a.csv', 'w', newline = '') as f:
+    with open('a.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(csv_lists)
 
