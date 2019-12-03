@@ -91,18 +91,37 @@ def identify_bubble(fname, img_origin, img):
 
     contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # print(contours)
-    with open('results/data/bubble/contours.csv', 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(contours)
-    for cnt in contours:
+    # with open('results/data/bubble/contours.csv', 'w', newline='') as f:
+    #     writer = csv.writer(f)
+    #     writer.writerows(contours)
+    cnt_list = None
+    for cnt_index, cnt in enumerate(contours):
         if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
-            (x,y), (MA,ma), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
+            (x, y), (long_rad, short_rad), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
             # print(ellipse)
-            if 80 < angle < 100 and MA >= 10 and ma >= 10: #楕円の向きを絞り,直線を近似しているものは排除する
-                print([x, y, MA, ma])
-                img_bubble_canny = cv2.ellipse(img_origin, ((x,y),(MA,ma),angle), (255,0,0), 1)
-                cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_bubble_canny)
+            if 80 < angle < 100 and long_rad >= 10 and short_rad >= 10: #楕円の向きを絞り,直線を近似しているものは排除する
+                # print([x, y, long_rad, short_rad])
+                # print(cnt[:, 0, 0]) 
+                cnt_left_edge  = min(cnt[:,0,0]) #3次元numpy配列になっている（[[[a, b]], [[c, d]]]という形）
+                cnt_right_edge = max(cnt[:,0,0])
+                cnt_upper_edge = min(cnt[:,0,1])
+                cnt_lower_edge = max(cnt[:,0,1])
+                x_cal          = (cnt_left_edge  + cnt_right_edge) * 0.5
+                y_cal          = (cnt_upper_edge + cnt_lower_edge) * 0.5
+                long_rad_cal   = cnt_right_edge - x_cal
+                short_rad_cal  = cnt_lower_edge - y_cal
+                cnt_RMS        = ((x_cal - x) ** 2 + (y_cal - y) ** 2 + (long_rad_cal - long_rad) ** 2 + (short_rad_cal - short_rad) ** 2) ** 0.5
 
+                if cnt_list == None or cnt_RMS < cnt_list[1]:
+                    cnt_list = [cnt_index, cnt_RMS]
+                else:
+                    continue
+    target_cnt_index = cnt_list[0]
+    target_cnt = contours[target_cnt_index][:,0] #対象のcontourを取り出し、3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
+    # print(cnt_list)
+    # print(target_cnt)
+    img_ellipse = cv2.drawContours(img_origin, [contours[target_cnt_index]], 0, (0, 0, 255), 2)
+    cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
 
 if __name__ == "__main__":
