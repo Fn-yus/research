@@ -78,16 +78,12 @@ def identify_scale(img, fname):
     return scales, img_gray_denoised
 
 def identify_bubble(fname, img_origin, img):
-    ret, img_bubble_thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
-    img_bubble_thresh_canny = cv2.Canny(img_bubble_thresh, 0, 100)
+    # ret, img_bubble_thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
+    # img_bubble_thresh_canny = cv2.Canny(img_bubble_thresh, 0, 100)
     img_bubble_canny = cv2.Canny(img, 250, 550)
-    cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
-    cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
+    # cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
+    # cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
     cv2.imwrite('results/pictures/bubble/img_bubble_canny.jpg', img_bubble_canny)
-
-    '''
-    基準の画像で気泡を特定
-    '''
 
     contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # print(contours)
@@ -95,7 +91,7 @@ def identify_bubble(fname, img_origin, img):
     #     writer = csv.writer(f)
     #     writer.writerows(contours)
     cnt_list = None
-    for cnt_index, cnt in enumerate(contours):
+    for cnt in contours:
         if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
             (x, y), (long_rad, short_rad), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
             # print(ellipse)
@@ -113,16 +109,54 @@ def identify_bubble(fname, img_origin, img):
                 cnt_RMS        = ((x_cal - x) ** 2 + (y_cal - y) ** 2 + (long_rad_cal - long_rad) ** 2 + (short_rad_cal - short_rad) ** 2) ** 0.5
 
                 if cnt_list == None or cnt_RMS < cnt_list[1]:
-                    cnt_list = [cnt_index, cnt_RMS]
+                    cnt_list = [cnt, cnt_RMS]
                 else:
                     continue
-    target_cnt_index = cnt_list[0]
-    target_cnt = contours[target_cnt_index][:,0] #対象のcontourを取り出し、3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
+
+    target_cnt = cnt_list[0][:,0] #3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
     # print(cnt_list)
     # print(target_cnt)
-    img_ellipse = cv2.drawContours(img_origin, [contours[target_cnt_index]], 0, (0, 0, 255), 2)
+    img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (0, 0, 255), 2)
     cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
+    return target_cnt
+
+def cross_correlation(fname, img_origin, img, origin_cnt):
+    img_bubble_canny = cv2.Canny(img, 250, 550)
+    contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+    # 以下のループ処理はかなり重いと予想されるため、findContoursの第3引数をcv2.CHAIN_APPBOX_SIMPLEにすることも考える(精度に関しては要検証)
+    # 2019/12/03 研究室PC, cv2.CHAIN_APPBOX_SIMPLE, (x, y) = (-100~100, -1~1) で 69分予想（開始11分段階）
+
+    correlation_list = None
+    for cnt in contours:
+        for x in range(-100, 100):
+            for y in range(-10, 10):
+                # 全ての行が[x, y]のcontoursのサイズを持つnumpy配列を作成し足す
+                origin_cnt_size = len(origin_cnt)
+                cross_list      = np.array([[x,y] for i in range(origin_cnt_size)])
+                cross_cnt       = origin_cnt + cross_list
+                cross_count     = 0
+                for cross_pixel in cross_cnt:
+                    cross_pixel_count = np.count_nonzero((cnt[:, 0] == cross_pixel).all(axis=1)) #行方向に対して配列ごとに一致しているかどうかをBooleanで判断し、Trueの数を数える
+                    # print((cnt[:,0] == cross_pixel).all(axis=1))
+                    if cross_pixel_count != 0: #速くなったりしないかな
+                        cross_count += cross_pixel_count
+                if correlation_list == None or cross_count > correlation_list[3]:
+                    correlation_list = [cnt, x, y, cross_count]
+    
+    img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
+
+    created_unix_time = os.path.getmtime(fname)
+    created_datetime  = datetime.fromtimestamp(created_unix_time)
+    dt = created_datetime.strftime('%Y%m%d%H%M%S')
+    cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(dt), img_contour)
+    cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(dt), img_bubble_canny)
+
+    with open('results/data/bubble/corr.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        csv_list =sum([[dt], correlation_list[1:]], [])
+        writer.writerow(csv_list)
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
@@ -130,12 +164,17 @@ if __name__ == "__main__":
     target_path = config.get('path', 'long-bubble')
     target_files = glob.glob(target_path)
     csv_lists = []
-    for fname in [target_files[0]]: #決め打ち
-        print(fname)
+    target_cnt = None
+    for fname in tqdm(target_files): #決め打ち
+        # print(fname)
         img = trimming(fname)
         identify_scale_list = identify_scale(img, fname)
         scales = identify_scale_list[0]
-        identify_bubble(fname, img, identify_scale_list[1])
+        if fname == target_files[0]:
+            target_cnt = identify_bubble(fname, img, identify_scale_list[1])
+            cross_correlation(fname, img, identify_scale_list[1], target_cnt)
+        else:
+            cross_correlation(fname, img, identify_scale_list[1], target_cnt)
         csv_list = sum([[fname], scales], []) #平坦化している
         csv_lists.append(csv_list)
 
