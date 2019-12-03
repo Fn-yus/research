@@ -126,7 +126,7 @@ def cross_correlation(fname, img_origin, img, origin_cnt):
     contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     # 以下のループ処理はかなり重いと予想されるため、findContoursの第3引数をcv2.CHAIN_APPBOX_SIMPLEにすることも考える(精度に関しては要検証)
-    # 2019/12/03 研究室PC, cv2.CHAIN_APPBOX_SIMPLE, (x, y) = (-100~100, -1~1) で 69分予想（開始11分段階）
+    # 2019/12/03 研究室PC, cv2.CHAIN_APPBOX_SIMPLE, (x, y) = (-100~100, -1~1) で 69分予想（開始11分段階） -> 結果1時間ほどかかった
 
     correlation_list = None
     for cnt in contours:
