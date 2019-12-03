@@ -85,17 +85,17 @@ def identify_scale(img, img_needle, fname):
     else:
         pass
 
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
+    img_gray          = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
-    img_canny = cv2.Canny(img_gray_denoised, 70, 150)
-    img_canny2 = cv2.bitwise_not(img_canny)
-    ret, img_thresh = cv2.threshold(img_canny2, 127, 255, cv2.THRESH_BINARY)
+    img_canny         = cv2.Canny(img_gray_denoised, 70, 150)
+    img_canny2        = cv2.bitwise_not(img_canny)
+    _, img_thresh     = cv2.threshold(img_canny2, 127, 255, cv2.THRESH_BINARY)
 
     if "long-needle" in fname.lower():
-        img_thresh[-1000:1000, 0:20] = 255     #画像左端の映り込み部分を削除
+        img_thresh[-1000:1000, 0:20]    = 255  #画像左端の映り込み部分を削除
         img_thresh[-1000:1000, 484:505] = 255  #画像右端の映り込み部分を削除
     elif "cross-needle" in fname.lower():
-        img_thresh[-1000:1000, 0:15] = 255     #画像左端の影映り込み部分を削除
+        img_thresh[-1000:1000, 0:15]    = 255  #画像左端の影映り込み部分を削除
 
     scale_list = []
     for row in img_thresh:
@@ -114,9 +114,9 @@ def identify_scale(img, img_needle, fname):
     else:
         pass
 
-    scale_list = np.mean(np.array(scale_list), axis=0)      #条件に一致する線の平均をリストに
+    scale_list         = np.mean(np.array(scale_list), axis=0)      #条件に一致する線の平均をリストに
     scale_list_splited = np.split(np.array(scale_list), 7)  #目盛りの左右の線ごとにまとめる
-    scales = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
+    scales             = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
 
     cv2.line(img, (Decimal(str(needle)).quantize(Decimal("0")), 1000), (Decimal(str(needle)).quantize(Decimal("0")), -1000), (0, 0, 255), 1)
     for i in scales:
@@ -136,44 +136,44 @@ def digitalize(needle, scales):
         scale_upper_list, = np.where(needle <= scales)
         scale_lower_list, = np.where(needle >= scales)
 
-        if len(scale_upper_list) == 0:   #一番右の目盛りより右側に針がある場合
+        if len(scale_upper_list)   == 0: #一番右の目盛りより右側に針がある場合
             return None
 
         elif len(scale_lower_list) == 0: #一番左の目盛りより左側に針がある場合
             return None
 
         else:
-            scale_upper = scales[min(scale_upper_list)]
+            scale_upper       = scales[min(scale_upper_list)]
 
             scale_lower_index = max(scale_lower_list)
-            scale_lower = scales[scale_lower_index]
+            scale_lower       = scales[scale_lower_index]
 
             needle_percentage = (needle - scale_lower)/(scale_upper - scale_lower)
-            needle_position = (scale_lower_index - 3) + needle_percentage
+            needle_position   = (scale_lower_index - 3) + needle_percentage
 
             return needle_position
 
 def plot(master_file_path, csv_file_path, target):
     master_data = np.loadtxt(master_file_path, encoding='utf-8')
-    csv_data = np.loadtxt(csv_file_path, delimiter=',', skiprows=1, encoding='utf-8')
+    csv_data    = np.loadtxt(csv_file_path, delimiter=',', skiprows=1, encoding='utf-8')
 
     csv_schedule = csv_data.astype(int)
-    start_time = datetime(csv_schedule[0,0], csv_schedule[0,1], csv_schedule[0,2], csv_schedule[0,3], csv_schedule[0,4], 00)
-    row_size = csv_data.shape[0] -1 
-    end_time = datetime(csv_schedule[row_size,0], csv_schedule[row_size,1], csv_schedule[row_size,2], csv_schedule[row_size,3], csv_schedule[row_size,4], 59)
+    start_time   = datetime(csv_schedule[0,0], csv_schedule[0,1], csv_schedule[0,2], csv_schedule[0,3], csv_schedule[0,4], 00)
+    row_size     = csv_data.shape[0] -1 
+    end_time     = datetime(csv_schedule[row_size,0], csv_schedule[row_size,1], csv_schedule[row_size,2], csv_schedule[row_size,3], csv_schedule[row_size,4], 59)
 
     sorted_csv_data = []
     for s_index in range(csv_schedule.shape[0]):
-        index = s_index - 1
+        index       = s_index - 1
         target_time = datetime(csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5])
-        new_row = [csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5], (target_time - start_time).total_seconds(), csv_data[index,14]]
+        new_row     = [csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5], (target_time - start_time).total_seconds(), csv_data[index,14]]
         sorted_csv_data.append(new_row)
    
     sorted_master_data = []
-    experiment_data = []
+    experiment_data    = []
     for row in master_data: 
         row_schedule = row.astype(int)
-        target_time = datetime(row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6])
+        target_time  = datetime(row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6])
         if start_time <= target_time <= end_time:
             if target.lower() == "long-needle":
                 sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
@@ -181,9 +181,9 @@ def plot(master_file_path, csv_file_path, target):
                 sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[9]/17.107])
 
         experiment_start_time = datetime(2019, 7, 16, 13, 21, 00)
-        long_end_time = datetime(2019, 7, 16, 13, 58, 00)
-        cross_start_time = datetime(2019, 7, 16, 15, 16, 00)
-        experiment_end_time = datetime(2019, 7, 16, 15, 50, 00)
+        long_end_time         = datetime(2019, 7, 16, 13, 58, 00)
+        cross_start_time      = datetime(2019, 7, 16, 15, 16, 00)
+        experiment_end_time   = datetime(2019, 7, 16, 15, 50, 00)
         if experiment_start_time <= target_time <= long_end_time or cross_start_time <= target_time <= experiment_end_time:
             experiment_data.append([(target_time - experiment_start_time).total_seconds(), row[7], row[8]/15.379, row[9]/17.107])
         elif long_end_time <= target_time <= cross_start_time:
@@ -206,12 +206,11 @@ def plot(master_file_path, csv_file_path, target):
                 x3.append(c_row[7])
                 y3.append(m_row[7])
 
-    r = np.corrcoef(np.array(x3), np.array(y3))[0,1]
-
-    (a, b, sa, sb)= least_square(np.array(x3), np.array(y3))
+    r              = np.corrcoef(np.array(x3), np.array(y3))[0,1]
+    (a, b, sa, sb) = least_square(np.array(x3), np.array(y3))
 
     graph_target = target.replace("-", "_")        #返り値例 "long_needle" 
-    target_sort = target.replace(target[-7:], "")  #返り値は "long" か "cross"
+    target_sort  = target.replace(target[-7:], "")  #返り値は "long" か "cross"
 
     fig1 = plt.figure()
     fig2 = plt.figure()
@@ -267,7 +266,7 @@ def least_square(x, y):
 
     sy = Decimal(((sum(np.square(a * x + b - y)))/(N - 2)) ** 0.5)
 
-    getcontext().prec = 1
+    getcontext().prec     = 1
     getcontext().rounding = ROUND_HALF_UP
     sa = sy * Decimal(((N/(N * sum(square_x) - (sum(x) ** 2))) ** 0.5))
     sb = sy * Decimal(((sum(square_x)/(N * sum(square_x) - (sum(x) ** 2))) ** 0.5))
@@ -303,9 +302,9 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config/config.ini")
     master_txt_path = config.get('path', 'master')
-    target_path = config.get('path', target)
-    target_files = glob.glob(target_path)
-    csv_files = glob.glob('results/data/{}/*.csv'.format(target))
+    target_path     = config.get('path', target)
+    target_files    = glob.glob(target_path)
+    csv_files       = glob.glob('results/data/{}/*.csv'.format(target))
 
     if  csv_files == []:
         print("画像を解析しています...")
@@ -315,16 +314,16 @@ if __name__ == "__main__":
         for fname in tqdm(target_files):
             #new_fname, ext = os.path.splitext(os.path.basename(fname))
             created_unix_time = os.path.getmtime(fname)
-            created_datetime = datetime.fromtimestamp(created_unix_time)
-            img = trimming(fname)
-            img_needle = extract_needle(img, fname)
-            identifyscale = identify_scale(img, img_needle, fname)
-            needle_position = digitalize(identifyscale[0], identifyscale[1])
+            created_datetime  = datetime.fromtimestamp(created_unix_time)
+            img               = trimming(fname)
+            img_needle        = extract_needle(img, fname)
+            identifyscale     = identify_scale(img, img_needle, fname)
+            needle_position   = digitalize(identifyscale[0], identifyscale[1])
             if needle_position != None and created_datetime.second >= 10:
                 csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
                 csv_lists.append(csv_list)
         
-        dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
+        dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
         csv_path = 'results/data/{}/{}.csv'.format(target, dt_now)
         with open(csv_path, 'w', newline = '') as f:
             writer = csv.writer(f)
