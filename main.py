@@ -313,6 +313,9 @@ if __name__ == "__main__":
         
         for fname in tqdm(target_files):
             #new_fname, ext = os.path.splitext(os.path.basename(fname))
+            '''
+            時刻は画像名から取得する（long_bubbleでは5秒ほどラグあり）
+            '''
             created_unix_time = os.path.getmtime(fname)
             created_datetime  = datetime.fromtimestamp(created_unix_time)
             img               = trimming(fname)
