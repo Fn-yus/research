@@ -18,7 +18,7 @@ def trimming(fname):
     return img_trimmed
 
 def identify_scale(img, fname):   
-    cv2.imwrite('img.jpg', img)
+    cv2.imwrite('results/pictures/bubble/img.jpg', img)
 
     gamma = 0.1
     lookuptable = np.zeros((256,1),dtype = 'uint8')
@@ -30,7 +30,7 @@ def identify_scale(img, fname):
     #img_scale_mask = cv2.inRange(img_darked, (0, 0, 0), (40, 40, 40))  #黒色
     #img_scale_masked = cv2.bitwise_and(img, img, mask=img_scale_mask) #元画像とマスク画像の共通部分を抽出
 
-    cv2.imwrite('img_darked.jpg', img_darked)
+    cv2.imwrite('results/pictures/bubble/img_darked.jpg', img_darked)
 
     img_gray = cv2.cvtColor(img_darked, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
@@ -40,9 +40,9 @@ def identify_scale(img, fname):
     img_thresh_canny = cv2.Canny(img_thresh, 0, 100)
     img_thresh_canny2 = cv2.bitwise_not(img_thresh_canny)
 
-    cv2.imwrite('img_gray.jpg', img_gray_denoised)
-    cv2.imwrite('img_thresh.jpg', img_thresh)
-    cv2.imwrite('img_thresh_canny.jpg', img_thresh_canny)    
+    cv2.imwrite('results/pictures/bubble/img_gray.jpg', img_gray_denoised)
+    cv2.imwrite('results/pictures/bubble/img_thresh.jpg', img_thresh)
+    cv2.imwrite('results/pictures/bubble/img_thresh_canny.jpg', img_thresh_canny)    
 
     scale_list = []
     for row in img_thresh_canny2:
@@ -72,8 +72,8 @@ def identify_scale(img, fname):
     for i in scales:
         cv2.line(img, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
     
-    cv2.imwrite('img_thresh_canny2.jpg', img_thresh_canny2)
-    cv2.imwrite('img_lined.jpg'.format(fname), img)
+    cv2.imwrite('results/pictures/bubble/img_thresh_canny2.jpg', img_thresh_canny2)
+    cv2.imwrite('results/pictures/bubble/img_lined.jpg'.format(fname), img)
 
     return scales, img_gray_denoised
 
@@ -81,9 +81,9 @@ def identify_bubble(fname, img_origin, img):
     ret, img_bubble_thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     img_bubble_thresh_canny = cv2.Canny(img_bubble_thresh, 0, 100)
     img_bubble_canny = cv2.Canny(img, 250, 550)
-    cv2.imwrite('img_bubble_thresh.jpg', img_bubble_thresh)
-    cv2.imwrite('img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
-    cv2.imwrite('img_bubble_canny.jpg', img_bubble_canny)
+    cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
+    cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
+    cv2.imwrite('results/pictures/bubble/img_bubble_canny.jpg', img_bubble_canny)
 
     '''
     基準の画像で気泡を特定
@@ -91,19 +91,17 @@ def identify_bubble(fname, img_origin, img):
 
     contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # print(contours)
-    with open('contours.csv', 'w', newline='') as f:
+    with open('results/data/bubble/contours.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(contours)
     for cnt in contours:
         if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
-            print(len(cnt))
             (x,y), (MA,ma), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
-            print(angle)
             # print(ellipse)
             if 80 < angle < 100 and MA >= 10 and ma >= 10: #楕円の向きを絞り,直線を近似しているものは排除する
                 print([x, y, MA, ma])
                 img_bubble_canny = cv2.ellipse(img_origin, ((x,y),(MA,ma),angle), (255,0,0), 1)
-                cv2.imwrite('img_ellipse.jpg', img_bubble_canny)
+                cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_bubble_canny)
 
 
 
@@ -122,7 +120,7 @@ if __name__ == "__main__":
         csv_list = sum([[fname], scales], []) #平坦化している
         csv_lists.append(csv_list)
 
-    with open('a.csv', 'w', newline='') as f:
+    with open('results/data/bubble/a.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(csv_lists)
 

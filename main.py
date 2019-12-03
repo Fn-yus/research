@@ -14,11 +14,11 @@ def trimming(fname):
         img = cv2.imread(fname)
         if "long-needle" in fname.lower():
             img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
-            cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)
+            cv2.imwrite('results/pictures/needle/img_trimmed.jpg', img_trimmed)
             return img_trimmed
         elif "cross-needle" in fname.lower():
             img_trimmed = img[192:288, 90:535]            
-            cv2.imwrite('results/pictures/img_trimmed.jpg', img_trimmed)     
+            cv2.imwrite('results/pictures/needle/img_trimmed.jpg', img_trimmed)     
             return img_trimmed
         else:
             pass
@@ -40,7 +40,7 @@ def extract_needle(img, fname):
     img_mask = cv2.bitwise_or(mask1, mask2)               #範囲を指定してマスク画像作成
     img_needle = cv2.bitwise_and(img, img, mask=img_mask) #元画像とマスク画像の共通部分を抽出
 
-    cv2.imwrite('results/pictures/img_needle.jpg', img_needle)
+    cv2.imwrite('results/pictures/needle/img_needle.jpg', img_needle)
     return img_needle  
 
 def identify_scale(img, img_needle, fname):
@@ -122,9 +122,9 @@ def identify_scale(img, img_needle, fname):
     for i in scales:
         cv2.line(img, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
 
-    cv2.imwrite('results/pictures/img.jpg', img)
-    cv2.imwrite('results/pictures/img_needle_thresh.jpg', img_needle_thresh)
-    cv2.imwrite('results/pictures/img_thresh.jpg', img_thresh)
+    cv2.imwrite('results/pictures/needle/img.jpg', img)
+    cv2.imwrite('results/pictures/needle/img_needle_thresh.jpg', img_needle_thresh)
+    cv2.imwrite('results/pictures/needle/img_thresh.jpg', img_thresh)
 
     return needle, scales
 
