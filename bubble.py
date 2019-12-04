@@ -121,39 +121,40 @@ def identify_bubble(fname, img_origin, img):
 
     return target_cnt
 
-def cross_correlation(fname, img_origin, img, origin_cnt):
+def cross_correlation(fname, img_origin, img, origin_cnt, dt_now):
     img_bubble_canny = cv2.Canny(img, 250, 550)
-    contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # 以下のループ処理はかなり重いと予想されるため、findContoursの第3引数をcv2.CHAIN_APPBOX_SIMPLEにすることも考える(精度に関しては要検証)
-    # 2019/12/03 研究室PC, cv2.CHAIN_APPBOX_SIMPLE, (x, y) = (-100~100, -1~1) で 69分予想（開始11分段階） -> 結果1時間ほどかかった
+    # 2019/12/03 研究室PC, cv2.CHAIN_APPBOX_SIMPLE, (x, y) = (-100~100, -1~1)   で 69分予想（開始11分段階） -> 結果1時間ほどかかった
+    # 2019/12/03 研究室PC, cv2.CHAIN_APPROX_NONE,   (x, y) = (-100~100, -10~10) で 12時間かかった
+    # 2019/12/03 研究室PC, cv2.CHAIN_APPROX_NONE,   (x, y) = (-75~75,   0) で 25分
+    # 2019/12/03 研究室PC, cv2.CHAIN_APPROX_SIMPLE  (x, y) = (-75~75,   0) で 18分
 
     correlation_list = None
     for cnt in contours:
-        for x in range(-100, 100):
-            for y in range(-10, 10):
+        for x in range(-75, 75):
+            # for y in range(-10, 10): # y = [-10, 10] で実行しても解の幅は -1 ~ 1 だったのでとりあえずなくす
                 # 全ての行が[x, y]のcontoursのサイズを持つnumpy配列を作成し足す
-                origin_cnt_size = len(origin_cnt)
-                cross_list      = np.array([[x,y] for i in range(origin_cnt_size)])
-                cross_cnt       = origin_cnt + cross_list
-                cross_count     = 0
-                for cross_pixel in cross_cnt:
-                    cross_pixel_count = np.count_nonzero((cnt[:, 0] == cross_pixel).all(axis=1)) #行方向に対して配列ごとに一致しているかどうかをBooleanで判断し、Trueの数を数える
-                    # print((cnt[:,0] == cross_pixel).all(axis=1))
-                    if cross_pixel_count != 0: #速くなったりしないかな
-                        cross_count += cross_pixel_count
-                if correlation_list == None or cross_count > correlation_list[3]:
-                    correlation_list = [cnt, x, y, cross_count]
+            origin_cnt_size = len(origin_cnt)
+            cross_list      = np.array([[x,0] for i in range(origin_cnt_size)])
+            cross_cnt       = origin_cnt + cross_list
+            cross_count     = 0
+            for cross_pixel in cross_cnt:
+                cross_pixel_count = np.count_nonzero((cnt[:, 0] == cross_pixel).all(axis=1)) #行方向に対して配列ごとに一致しているかどうかをBooleanで判断し、Trueの数を数える
+                # print((cnt[:,0] == cross_pixel).all(axis=1))
+                if cross_pixel_count != 0: #速くなったりしないかな
+                    cross_count += cross_pixel_count
+            if correlation_list == None or cross_count > correlation_list[2]:
+                correlation_list = [cnt, x, cross_count]
     
     img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
 
-    created_unix_time = os.path.getmtime(fname)
-    created_datetime  = datetime.fromtimestamp(created_unix_time)
-    dt = created_datetime.strftime('%Y%m%d%H%M%S')
+    dt, _ = os.path.splitext(os.path.basename(fname))
     cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(dt), img_contour)
     cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(dt), img_bubble_canny)
 
-    with open('results/data/bubble/corr.csv', 'a', newline='') as f:
+    with open('results/data/bubble/corr_{}.csv'.format(dt_now), 'a', newline='') as f:
         writer = csv.writer(f)
         csv_list =sum([[dt], correlation_list[1:]], [])
         writer.writerow(csv_list)
@@ -163,6 +164,7 @@ if __name__ == "__main__":
     config.read("config/config.ini")
     target_path = config.get('path', 'long-bubble')
     target_files = glob.glob(target_path)
+    dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
     csv_lists = []
     target_cnt = None
     for fname in tqdm(target_files): #決め打ち
@@ -172,9 +174,9 @@ if __name__ == "__main__":
         scales = identify_scale_list[0]
         if fname == target_files[0]:
             target_cnt = identify_bubble(fname, img, identify_scale_list[1])
-            cross_correlation(fname, img, identify_scale_list[1], target_cnt)
+            cross_correlation(fname, img, identify_scale_list[1], target_cnt, dt_now)
         else:
-            cross_correlation(fname, img, identify_scale_list[1], target_cnt)
+            cross_correlation(fname, img, identify_scale_list[1], target_cnt, dt_now)
         csv_list = sum([[fname], scales], []) #平坦化している
         csv_lists.append(csv_list)
 

@@ -312,12 +312,8 @@ if __name__ == "__main__":
         csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
         
         for fname in tqdm(target_files):
-            #new_fname, ext = os.path.splitext(os.path.basename(fname))
-            '''
-            時刻は画像名から取得する（long_bubbleでは5秒ほどラグあり）
-            '''
-            created_unix_time = os.path.getmtime(fname)
-            created_datetime  = datetime.fromtimestamp(created_unix_time)
+            datetime_number, _ = os.path.splitext(os.path.basename(fname))
+            created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
             img               = trimming(fname)
             img_needle        = extract_needle(img, fname)
             identifyscale     = identify_scale(img, img_needle, fname)
