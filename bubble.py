@@ -121,7 +121,7 @@ def identify_bubble(fname, img_origin, img):
 
     return target_cnt
 
-def cross_correlation(fname, img_origin, img, origin_cnt, dt_now):
+def cross_correlation(fname, img_origin, img, origin_cnt):
     img_bubble_canny = cv2.Canny(img, 250, 550)
     contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -150,39 +150,54 @@ def cross_correlation(fname, img_origin, img, origin_cnt, dt_now):
     
     img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
 
-    dt, _ = os.path.splitext(os.path.basename(fname))
-    cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(dt), img_contour)
-    cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(dt), img_bubble_canny)
+    datetime_number, _ = os.path.splitext(os.path.basename(fname))
+    created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
+    cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
+    cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
 
-    with open('results/data/bubble/corr_{}.csv'.format(dt_now), 'a', newline='') as f:
-        writer = csv.writer(f)
-        csv_list =sum([[dt], correlation_list[1:]], [])
-        writer.writerow(csv_list)
+    corr_list = correlation_list[1:]
+    return corr_list
+
+def plot(master_path, csv_path, target):
+    master_data = np.loadtxt(master_file_path, encoding='utf-8')
+    csv_data    = np.loadtxt(csv_file_path, delimiter=',', skiprows=1, encoding='utf-8')
+
+    
+
+
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config/config.ini")
+    master_txt_path = config.get('path', 'master')
     target_path = config.get('path', 'long-bubble')
     target_files = glob.glob(target_path)
-    dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
-    csv_lists = []
     target_cnt = None
+
+    csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "movement", "corr_count"]]
+    
     for fname in tqdm(target_files): #決め打ち
-        # print(fname)
+        datetime_number, _ = os.path.splitext(os.path.basename(fname))
+        created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
         img = trimming(fname)
         identify_scale_list = identify_scale(img, fname)
         scales = identify_scale_list[0]
         if fname == target_files[0]:
             target_cnt = identify_bubble(fname, img, identify_scale_list[1])
-            cross_correlation(fname, img, identify_scale_list[1], target_cnt, dt_now)
+            corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt)
         else:
-            cross_correlation(fname, img, identify_scale_list[1], target_cnt, dt_now)
-        csv_list = sum([[fname], scales], []) #平坦化している
+            corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt)
+        csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], corr_list], []) #平坦化している
+        print(csv_list)
         csv_lists.append(csv_list)
 
-    with open('results/data/bubble/a.csv', 'w', newline='') as f:
+    dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
+    csv_path = 'results/data/bubble/{}.csv'.format(dt_now)
+    with open(csv_path, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(csv_lists)
+
+    plot(master_txt_path, csv_path, "long-bubble")
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

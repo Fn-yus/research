@@ -159,14 +159,12 @@ def plot(master_file_path, csv_file_path, target):
 
     csv_schedule = csv_data.astype(int)
     start_time   = datetime(csv_schedule[0,0], csv_schedule[0,1], csv_schedule[0,2], csv_schedule[0,3], csv_schedule[0,4], 00)
-    row_size     = csv_data.shape[0] -1 
-    end_time     = datetime(csv_schedule[row_size,0], csv_schedule[row_size,1], csv_schedule[row_size,2], csv_schedule[row_size,3], csv_schedule[row_size,4], 59)
+    end_time     = datetime(csv_schedule[-1,0], csv_schedule[-1,1], csv_schedule[-1,2], csv_schedule[-1,3], csv_schedule[-1,4], 59)
 
     sorted_csv_data = []
-    for s_index in range(csv_schedule.shape[0]):
-        index       = s_index - 1
-        target_time = datetime(csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5])
-        new_row     = [csv_schedule[index,0], csv_schedule[index,1], csv_schedule[index,2], csv_schedule[index,3], csv_schedule[index,4], csv_schedule[index,5], (target_time - start_time).total_seconds(), csv_data[index,14]]
+    for index, csv_row in enumerate(csv_schedule):
+        target_time = datetime(csv_row[0], csv_row[1], csv_row[2], csv_row[3], csv_row[4], csv_row[5])
+        new_row     = [csv_row[0], csv_row[1], csv_row[2], csv_row[3], csv_row[4], csv_row[5], (target_time - start_time).total_seconds(), csv_data[index,14]]
         sorted_csv_data.append(new_row)
    
     sorted_master_data = []
