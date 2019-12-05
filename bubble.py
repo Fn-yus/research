@@ -84,7 +84,8 @@ def identify_bubble(fname, img_origin, img):
     img_bubble_canny = cv2.Canny(img, 250, 550)
     # cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
     # cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
-    cv2.imwrite('results/pictures/bubble/img_bubble_canny.jpg', img_bubble_canny)
+    # cv2.imwrite('results/pictures/bubble/img_gray_denoised.jpg', img)
+    # cv2.imwrite('results/pictures/bubble/img_bubble_canny.jpg', img_bubble_canny)
 
     contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # print(contours)
@@ -95,6 +96,7 @@ def identify_bubble(fname, img_origin, img):
     for cnt in contours:
         if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
             (x, y), (long_rad, short_rad), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
+            # img_all_contour = cv2.ellipse(img_origin, ((x, y), (long_rad, short_rad), angle), (0,255,0), 2)
             # print(ellipse)
             if 80 < angle < 100 and long_rad >= 10 and short_rad >= 10: #楕円の向きを絞り,直線を近似しているものは排除する
                 # print([x, y, long_rad, short_rad])
@@ -117,8 +119,10 @@ def identify_bubble(fname, img_origin, img):
     target_cnt = cnt_list[0][:,0] #3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
     # print(cnt_list)
     # print(target_cnt)
-    img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (0, 0, 255), 2)
-    cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
+    # cv2.imwrite('results/pictures/bubble/img_all_contour.jpg', img_all_contour)
+
+    # img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (0, 0, 255), 2)
+    # cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
     return target_cnt
 
