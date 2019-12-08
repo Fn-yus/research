@@ -112,7 +112,7 @@ def identify_bubble(fname, img_origin, img):
                 cnt_RMS        = ((x_cal - x) ** 2 + (y_cal - y) ** 2 + (long_rad_cal - long_rad) ** 2 + (short_rad_cal - short_rad) ** 2) ** 0.5
 
                 if cnt_list == None or cnt_RMS < cnt_list[1]:
-                    cnt_list = [cnt, cnt_RMS]
+                    cnt_list = [cnt, x_cal, cnt_RMS]
                 else:
                     continue
 
@@ -124,7 +124,7 @@ def identify_bubble(fname, img_origin, img):
     # img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (0, 0, 255), 2)
     # cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
-    return target_cnt
+    return target_cnt, cnt_list[1]
 
 def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_second):
     img_bubble_canny = cv2.Canny(img, 250, 550)
@@ -138,7 +138,7 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
 
     correlation_list = None
     if created_datetime_second >= 10:
-        for cnt, x in product(contours, range(-75, 75)):
+        for cnt, x in product(contours, range(-60, 60)):
             # for y in range(-10, 10): # y = [-10, 10] で実行しても解の幅は -1 ~ 1 だったのでとりあえずなくす
             # 全ての行が[x, y]のcontoursのサイズを持つnumpy配列を作成し足す
             origin_cnt_size = len(origin_cnt)
@@ -163,8 +163,20 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
         corr_list = correlation_list[1:] 
         return corr_list
     else:
-        corr_list = [None, None]
+        corr_list = None
         return corr_list
+
+def bubble_position(fname, scales, corr_list, x_origin):
+    origin_line = (scales[3] + scales[4]) * 0.5
+    scales_left = np.array(scales[0:4])
+    scales_right = np.array(scales[4:8])
+    scales_left_width_ave_list = np.diff(scales_left)
+    scales_right_width_ave_list = np.diff(scales_right)
+    scale_width_ave = np.mean(np.append(scales_left_width_ave_list, scales_right_width_ave_list))
+
+    bubble_pixel = x_origin + corr_list[0]
+    bubble_position = (bubble_pixel - origin_line) / scale_width_ave
+    return bubble_position
 
 def plot(master_path, csv_path, target):
     master_data = np.loadtxt(master_path, encoding='utf-8')
@@ -206,6 +218,14 @@ def plot(master_path, csv_path, target):
     y2 = np.array(sorted_master_data)[:,7]
     x3 = []
     y3 = []
+    x3_1 = []
+    x3_2 = []
+    x3_3 = []
+    x3_4 = []
+    y3_1 = []
+    y3_2 = []
+    y3_3 = []
+    y3_4 = []
     x4 = np.array(experiment_data)[:,0]
     y4_1 = np.array(experiment_data)[:,1]
     y4_2 = np.array(experiment_data)[:,2]
@@ -216,6 +236,19 @@ def plot(master_path, csv_path, target):
             if c_row[6] == m_row[6]:
                 x3.append(c_row[7])
                 y3.append(m_row[7])
+                if target == "long-bubble":
+                    if  0 <= c_row[6] < 660:
+                        x3_1.append(c_row[7])
+                        y3_1.append(m_row[7])
+                    elif 660 <= c_row[6] < 1140:
+                        x3_2.append(c_row[7])
+                        y3_2.append(m_row[7])
+                    elif 1140 <= c_row[6] < 1740:
+                        x3_3.append(c_row[7])
+                        y3_3.append(m_row[7])
+                    elif 1740 <= c_row[6] <= 2220:
+                        x3_4.append(c_row[7])
+                        y3_4.append(m_row[7])
 
     r              = np.corrcoef(np.array(x3), np.array(y3))[0,1]
     (a, b, sa, sb) = least_square(np.array(x3), np.array(y3))
@@ -227,6 +260,7 @@ def plot(master_path, csv_path, target):
     fig2 = plt.figure()
     fig3 = plt.figure()
     fig4 = plt.figure()
+    fig5 = plt.figure()
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
@@ -243,9 +277,14 @@ def plot(master_path, csv_path, target):
     ax2.grid(axis='y')
 
     ax3 = fig3.add_subplot(1, 1, 1)
-    ax3.scatter(np.array(x3), np.array(y3))
+    # ax3.scatter(np.array(x3), np.array(y3))
+    ax3.scatter(np.array(x3_1), np.array(y3_1), color="pink" ,label="±0 -> +100", alpha=0.5)
+    ax3.scatter(np.array(x3_2), np.array(y3_2), color="blue", label="+100 -> ±0", alpha=0.3)
+    ax3.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100", alpha=0.5)
+    ax3.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0", alpha=0.5)
+    ax3.legend()
     ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red")
-    ax3.set_title('Compare about analog and digital data(r={})'.format(r))
+    ax3.set_title('Compare analog data with digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-{} value'.format(graph_target))
     ax3.set_ylabel('tilt-{} value [arc-sec]'.format(target_sort))
     ax3.grid(axis='both')
@@ -263,6 +302,34 @@ def plot(master_path, csv_path, target):
     ax5.set_ylabel('tilt value [arc-sec]')
     ax5.grid(axis='y')
     ax5.legend(['tilt-long', 'tilt-cross'])
+
+    ax6 = fig5.add_subplot(2, 2, 1)
+    ax6.scatter(np.array(x3_1), np.array(y3_1), color="pink" ,label="±0 -> +100")
+    ax6.set_xlim([-2.5, 2.5])
+    ax6.set_ylim([-110, 110])
+    ax6.grid(axis='both')
+    ax6.legend()
+
+    ax7 = fig5.add_subplot(2, 2, 2)
+    ax7.scatter(np.array(x3_2), np.array(y3_2), color="yellow", label="+100 -> ±0")
+    ax7.set_xlim([-2.5, 2.5])
+    ax7.set_ylim([-110, 110])
+    ax7.grid(axis='both')
+    ax7.legend()
+
+    ax8 = fig5.add_subplot(2, 2, 3)
+    ax8.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100")
+    ax8.set_xlim([-2.5, 2.5])
+    ax8.set_ylim([-110, 110])
+    ax8.grid(axis='both')
+    ax8.legend()
+
+    ax9 = fig5.add_subplot(2, 2, 4)
+    ax9.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0")
+    ax9.set_xlim([-2.5, 2.5])
+    ax9.set_ylim([-110, 110]) 
+    ax9.grid(axis='both')  
+    ax9.legend()
 
     plt.show()
 
@@ -294,32 +361,42 @@ if __name__ == "__main__":
     master_txt_path = config.get('path', 'master')
     target_path = config.get('path', 'long-bubble')
     target_files = glob.glob(target_path)
-    target_cnt = None
+    csv_files       = glob.glob('results/data/{}/*.csv'.format("bubble"))
+    if csv_files == []:
+        target_cnt = None
+        x_origin = None
+        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "needle_position", "corr_count"]]
 
-    csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "movement", "corr_count"]]
-    
-    for fname in tqdm(target_files): #決め打ち
-        datetime_number, _ = os.path.splitext(os.path.basename(fname))
-        created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
-        img = trimming(fname)
-        identify_scale_list = identify_scale(img, fname)
-        scales = identify_scale_list[0]
-        if fname == target_files[0]:
-            target_cnt = identify_bubble(fname, img, identify_scale_list[1])
-            corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, 100)
-        else:
-            corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, created_datetime.second)
-        if corr_list != [None, None]:
-            csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], corr_list], []) #平坦化している
-            csv_lists.append(csv_list)
+        for fname in tqdm(target_files): #決め打ち
+            datetime_number, _ = os.path.splitext(os.path.basename(fname))
+            created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
+            img = trimming(fname)
+            identify_scale_list = identify_scale(img, fname)
+            scales = identify_scale_list[0]
+            if fname == target_files[0]:
+                target_cnt, x_origin = identify_bubble(fname, img, identify_scale_list[1])
+                corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, 100)
+                position = bubble_position(fname, scales, corr_list, x_origin)
+                csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[1]]
+                csv_lists.append(csv_list)
+            else:
+                corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, created_datetime.second)
+                if corr_list != None:
+                    position = bubble_position(fname, scales, corr_list, x_origin)
+                    csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[1]]
+                    csv_lists.append(csv_list)
 
-    dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
-    csv_path = 'results/data/bubble/{}.csv'.format(dt_now)
-    with open(csv_path, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(csv_lists)
+        dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
+        csv_path = 'results/data/bubble/{}.csv'.format(dt_now)
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(csv_lists)
 
-    plot(master_txt_path, csv_path, "long-bubble")
+        plot(master_txt_path, csv_path, "long-bubble")
+
+    else:
+        csv_file = csv_files[-1]
+        plot(master_txt_path, csv_file, "long-bubble")
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
