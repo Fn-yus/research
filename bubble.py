@@ -150,17 +150,20 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
                 # print((cnt[:,0] == cross_pixel).all(axis=1))
                 if cross_pixel_count != 0: #速くなったりしないかな
                     cross_count += cross_pixel_count
-            if correlation_list == None or cross_count > correlation_list[2]:
-                correlation_list = [cnt, x, cross_count]
-    
-        img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
+            if correlation_list == None or cross_count > correlation_list[3]:
+                correlation_list = [cnt, cross_cnt, x, cross_count]
 
         datetime_number, _ = os.path.splitext(os.path.basename(fname))
-        created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
-        cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
-        cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
 
-        corr_list = correlation_list[1:] 
+        img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
+        cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
+
+        img_wrapped = cv2.drawContours(img_contour, [correlation_list[1]], 0, (255, 0, 0), 1)
+
+        cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
+        cv2.imwrite('results/pictures/wrapped/img_wrapped_{}.jpg'.format(datetime_number), img_wrapped)
+
+        corr_list = correlation_list[2:] 
         return corr_list
     else:
         corr_list = None
@@ -282,13 +285,13 @@ def plot(master_path, csv_path, target):
     ax3.scatter(np.array(x3_2), np.array(y3_2), color="blue", label="+100 -> ±0", alpha=0.3)
     ax3.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100", alpha=0.5)
     ax3.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0", alpha=0.5)
+    ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red", label="y = ({}±{})x + ({}±{})".format(a, sa, b, sb))
     ax3.legend()
-    ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red")
     ax3.set_title('Compare analog data with digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-{} value'.format(graph_target))
     ax3.set_ylabel('tilt-{} value [arc-sec]'.format(target_sort))
     ax3.grid(axis='both')
-    ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
+    # ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
 
     ax4 = fig4.add_subplot(2, 1, 1)
     ax4.plot(x4, y4_1)
@@ -306,28 +309,28 @@ def plot(master_path, csv_path, target):
     ax6 = fig5.add_subplot(2, 2, 1)
     ax6.scatter(np.array(x3_1), np.array(y3_1), color="pink" ,label="±0 -> +100")
     ax6.set_xlim([-2.5, 2.5])
-    ax6.set_ylim([-110, 110])
+    ax6.set_ylim([-120, 120])
     ax6.grid(axis='both')
     ax6.legend()
 
     ax7 = fig5.add_subplot(2, 2, 2)
     ax7.scatter(np.array(x3_2), np.array(y3_2), color="yellow", label="+100 -> ±0")
     ax7.set_xlim([-2.5, 2.5])
-    ax7.set_ylim([-110, 110])
+    ax7.set_ylim([-120, 120])
     ax7.grid(axis='both')
     ax7.legend()
 
     ax8 = fig5.add_subplot(2, 2, 3)
     ax8.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100")
     ax8.set_xlim([-2.5, 2.5])
-    ax8.set_ylim([-110, 110])
+    ax8.set_ylim([-120, 120])
     ax8.grid(axis='both')
     ax8.legend()
 
     ax9 = fig5.add_subplot(2, 2, 4)
     ax9.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0")
     ax9.set_xlim([-2.5, 2.5])
-    ax9.set_ylim([-110, 110]) 
+    ax9.set_ylim([-120, 120]) 
     ax9.grid(axis='both')  
     ax9.legend()
 

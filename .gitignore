@@ -19,6 +19,7 @@ results/pictures/needle/*
 results/pictures/bubble/*
 results/pictures/contour/*
 results/pictures/canny/*
+results/pictures/wrapped/*
 
 # ignore plot csv file
 plot_data/*.csv
