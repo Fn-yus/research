@@ -121,8 +121,8 @@ def identify_bubble(fname, img_origin, img):
     # print(target_cnt)
     # cv2.imwrite('results/pictures/bubble/img_all_contour.jpg', img_all_contour)
 
-    # img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (0, 0, 255), 2)
-    # cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
+    img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (255, 0, 0), 1)
+    cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
     return target_cnt, cnt_list[1]
 
@@ -285,14 +285,13 @@ def plot(master_path, csv_path, target):
     ax3.scatter(np.array(x3_2), np.array(y3_2), color="blue", label="+100 -> ±0", alpha=0.3)
     ax3.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100", alpha=0.5)
     ax3.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0", alpha=0.5)
-    ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red", label="y = ({}±{})x + ({}±{})".format(a, sa, b, sb))
+    # ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red", label="y = ({}±{})x + ({}±{})".format(a, sa, b, sb))
     ax3.legend()
     ax3.set_title('Compare analog data with digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-{} value'.format(graph_target))
     ax3.set_ylabel('tilt-{} value [arc-sec]'.format(target_sort))
     ax3.grid(axis='both')
-    # ax3.legend(["y = ({}±{})x + ({}±{})".format(a, sa, b, sb)])
-
+    
     ax4 = fig4.add_subplot(2, 1, 1)
     ax4.plot(x4, y4_1)
     ax4.set_ylabel('Gravity [mGal]')
@@ -368,7 +367,7 @@ if __name__ == "__main__":
     if csv_files == []:
         target_cnt = None
         x_origin = None
-        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "needle_position", "corr_count"]]
+        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "needle_position", "movement", "corr_count"]]
 
         for fname in tqdm(target_files): #決め打ち
             datetime_number, _ = os.path.splitext(os.path.basename(fname))
@@ -380,13 +379,13 @@ if __name__ == "__main__":
                 target_cnt, x_origin = identify_bubble(fname, img, identify_scale_list[1])
                 corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, 100)
                 position = bubble_position(fname, scales, corr_list, x_origin)
-                csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[1]]
+                csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[0], corr_list[1]]
                 csv_lists.append(csv_list)
             else:
                 corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, created_datetime.second)
                 if corr_list != None:
                     position = bubble_position(fname, scales, corr_list, x_origin)
-                    csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[1]]
+                    csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[0], corr_list[1]]
                     csv_lists.append(csv_list)
 
         dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
