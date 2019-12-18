@@ -16,6 +16,8 @@ def trimming(fname):
     img_trimmed = None
     if "long-bubble" in fname.lower():
         img_trimmed = cv2.rotate(img[90:430, 235:390], cv2.ROTATE_90_COUNTERCLOCKWISE)
+    if "cross-bubble" in fname.lower():
+        img_trimmed = cv2.rotate(img[259:365, 120:515], cv2.ROTATE_180)
     return img_trimmed
 
 def identify_scale(img, fname):   
@@ -81,7 +83,11 @@ def identify_scale(img, fname):
 def identify_bubble(fname, img_origin, img):
     # ret, img_bubble_thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     # img_bubble_thresh_canny = cv2.Canny(img_bubble_thresh, 0, 100)
-    img_bubble_canny = cv2.Canny(img, 250, 550)
+    img_bubble_canny = None
+    if "long-bubble" in fname.lower():
+        img_bubble_canny = cv2.Canny(img, 250, 550)
+    elif "cross-bubble" in fname.lower():
+        img_bubble_canny = cv2.Canny(img, 150, 550)
     # cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
     # cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
     # cv2.imwrite('results/pictures/bubble/img_gray_denoised.jpg', img)
@@ -127,7 +133,11 @@ def identify_bubble(fname, img_origin, img):
     return target_cnt, cnt_list[1]
 
 def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_second):
-    img_bubble_canny = cv2.Canny(img, 250, 550)
+    img_bubble_canny = None
+    if "long-bubble" in fname.lower():
+        img_bubble_canny = cv2.Canny(img, 250, 550)
+    elif "cross-bubble" in fname.lower():
+        img_bubble_canny = cv2.Canny(img, 150, 550)
     contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # 以下のループ処理はかなり重いと予想されるため、findContoursの第3引数をcv2.CHAIN_APPBOX_SIMPLEにすることも考える(精度に関しては要検証)
@@ -280,12 +290,12 @@ def plot(master_path, csv_path, target):
     ax2.grid(axis='y')
 
     ax3 = fig3.add_subplot(1, 1, 1)
-    # ax3.scatter(np.array(x3), np.array(y3))
-    ax3.scatter(np.array(x3_1), np.array(y3_1), color="pink" ,label="±0 -> +100", alpha=0.5)
-    ax3.scatter(np.array(x3_2), np.array(y3_2), color="blue", label="+100 -> ±0", alpha=0.3)
-    ax3.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100", alpha=0.5)
-    ax3.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0", alpha=0.5)
-    # ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red", label="y = ({}±{})x + ({}±{})".format(a, sa, b, sb))
+    ax3.scatter(np.array(x3), np.array(y3))
+    # ax3.scatter(np.array(x3_1), np.array(y3_1), color="pink" ,label="±0 -> +100", alpha=0.5)
+    # ax3.scatter(np.array(x3_2), np.array(y3_2), color="blue", label="+100 -> ±0", alpha=0.3)
+    # ax3.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100", alpha=0.5)
+    # ax3.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0", alpha=0.5)
+    ax3.plot(np.array(x3), (a*np.array(x3)+b), color="red", label="y = ({}±{})x + ({}±{})".format(a, sa, b, sb))
     ax3.legend()
     ax3.set_title('Compare analog data with digital data(r={})'.format(r))
     ax3.set_xlabel('tilt-{} value'.format(graph_target))
@@ -358,12 +368,34 @@ def least_square(x, y):
     return float(a), float(b), float(sa), float(sb)
 
 if __name__ == "__main__":
+    target = None
+    while True:
+        target = input("解析する画像の種類を選んでください\n[1.long-bubble, 2.cross-bubble]：")
+        if target.lower() == "long-bubble" or target.lower() == "cross-bubble":
+            sleep(0.3)
+            print("ok\n")
+            break
+        elif target == "1":
+            sleep(0.3)
+            target = "long-bubble"
+            print("ok\n")
+            break
+        elif target == "2":
+            sleep(0.3)
+            target = "cross-bubble"
+            print("ok\n")
+            break
+        else:
+            sleep(0.3)
+            print("\n無効な値です\n")
+
     config = configparser.ConfigParser()
     config.read("config/config.ini")
     master_txt_path = config.get('path', 'master')
-    target_path = config.get('path', 'long-bubble')
-    target_files = glob.glob(target_path)
-    csv_files       = glob.glob('results/data/{}/*.csv'.format("bubble"))
+    target_path     = config.get('path', target)
+    target_files    = glob.glob(target_path)
+    csv_files       = glob.glob('results/data/{}/*.csv'.format(target))
+
     if csv_files == []:
         target_cnt = None
         x_origin = None
@@ -389,16 +421,16 @@ if __name__ == "__main__":
                     csv_lists.append(csv_list)
 
         dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
-        csv_path = 'results/data/bubble/{}.csv'.format(dt_now)
+        csv_path = 'results/data/{}/{}.csv'.format(target, dt_now)
         with open(csv_path, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(csv_lists)
 
-        plot(master_txt_path, csv_path, "long-bubble")
+        plot(master_txt_path, csv_path, target)
 
     else:
         csv_file = csv_files[-1]
-        plot(master_txt_path, csv_file, "long-bubble")
+        plot(master_txt_path, csv_file, target)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

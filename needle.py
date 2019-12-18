@@ -278,7 +278,7 @@ def least_square(x, y):
 if __name__ == "__main__":
     target = None
     while True:
-        target = input("解析する画像の種類を以下から選択し入力してください\n[1.long-needle, 2.cross-needle]：")
+        target = input("解析する画像の種類を選んでください\n[1.long-needle, 2.cross-needle]：")
         if target.lower() == "long-needle" or target.lower() == "cross-needle":
             sleep(0.3)
             print("ok\n")

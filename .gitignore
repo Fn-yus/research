@@ -14,7 +14,8 @@ config.ini
 # ignore results
 results/data/long-needle/*
 results/data/cross-needle/*
-results/data/bubble/*
+results/data/long-bubble/*
+results/data/cross-bubble/*
 results/pictures/needle/*
 results/pictures/bubble/*
 results/pictures/contour/*
