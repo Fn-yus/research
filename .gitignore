@@ -1,14 +1,14 @@
 # ignore python path
 .vscode
 
-#ignore .pyc files
+# ignore .pyc files
 __pycache__
 
-#ignore pictures except sample_1.jpg
+# ignore pictures except sample_1.jpg
 pictures/*
 !pictures/sample_1.jpg
 
-#ignore config file
+# ignore config file
 config.ini
 
 # ignore results
