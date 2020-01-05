@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from decimal import *
+from decimal import Decimal
 from datetime import datetime, timedelta
 from time import sleep
 import glob
@@ -24,7 +24,7 @@ def identify_scale(img, fname):
     cv2.imwrite('results/pictures/bubble/img.jpg', img)
 
     gamma = 0.1
-    lookuptable = np.zeros((256,1),dtype = 'uint8')
+    lookuptable = np.zeros((256,1), dtype='uint8')
     for i in range(256):
         lookuptable[i][0] = 255 * (float(i) / 255) ** (1.0 / gamma)
     
@@ -87,7 +87,7 @@ def identify_bubble(fname, img_origin, img):
     if "long-bubble" in fname.lower():
         img_bubble_canny = cv2.Canny(img, 250, 550)
     elif "cross-bubble" in fname.lower():
-        img_bubble_canny = cv2.Canny(img, 150, 550)
+        img_bubble_canny = cv2.Canny(img, 250, 550)
     # cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
     # cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
     # cv2.imwrite('results/pictures/bubble/img_gray_denoised.jpg', img)
@@ -98,8 +98,18 @@ def identify_bubble(fname, img_origin, img):
     # with open('results/data/bubble/contours.csv', 'w', newline='') as f:
     #     writer = csv.writer(f)
     #     writer.writerows(contours)
-    cnt_list = None
-    for cnt in contours:
+    contours_for_loop = None
+
+    if "long-bubble" in fname.lower():
+        contours_for_loop = contours
+    elif "cross-bubble" in fname.lower():
+        ndarray_contours = np.array(contours)
+        filtered_contours = np.concatenate([contours[4], contours[8]])
+        contours_for_loop = [filtered_contours]
+
+    cnt_list = None        
+
+    for cnt in contours_for_loop:
         if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
             (x, y), (long_rad, short_rad), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
             # img_all_contour = cv2.ellipse(img_origin, ((x, y), (long_rad, short_rad), angle), (0,255,0), 2)
@@ -116,18 +126,39 @@ def identify_bubble(fname, img_origin, img):
                 long_rad_cal   = cnt_right_edge - x_cal
                 short_rad_cal  = cnt_lower_edge - y_cal
                 cnt_RMS        = ((x_cal - x) ** 2 + (y_cal - y) ** 2 + (long_rad_cal - long_rad) ** 2 + (short_rad_cal - short_rad) ** 2) ** 0.5
-
-                if cnt_list == None or cnt_RMS < cnt_list[1]:
+                if cnt_list is None or cnt_RMS < cnt_list[1]:
                     cnt_list = [cnt, x_cal, cnt_RMS]
                 else:
                     continue
+                # elif "cross-bubble" in fname.lower():
+                #     if cnt_first_list == None:
+                #         cnt_first_list = [cnt, x_cal, cnt_RMS]
+                #     elif cnt_second_list == None:
+                #         if cnt_RMS < cnt_first_list[1]:
+                #             cnt_second_list = cnt_first_list
+                #             cnt_first_list = [cnt, x_cal, cnt_RMS]
+                #         else:
+                #             cnt_second_list = [cnt, x_cal, cnt_RMS]
+                #     elif cnt_RMS < cnt_first_list[1]:
+                #         cnt_second_list = cnt_first_list
+                #         cnt_first_list = [cnt, x_cal, cnt_RMS]
+                #     elif cnt_RMS < cnt_second_list[1]:
+                #         cnt_second_list = [cnt, x_cal, cnt_RMS]
+                #     else:
+                #         continue
+
+#    if "cross-bubble" in fname.lower():
+#        with open('a.csv', 'w', newline='') as f:
+#            writer = csv.writer(f)
+#            writer.writerows(contours)
 
     target_cnt = cnt_list[0][:,0] #3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
+    img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (255, 0, 0), 1)
+        
     # print(cnt_list)
     # print(target_cnt)
     # cv2.imwrite('results/pictures/bubble/img_all_contour.jpg', img_all_contour)
 
-    img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (255, 0, 0), 1)
     cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
     return target_cnt, cnt_list[1]
@@ -158,9 +189,8 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
             for cross_pixel in cross_cnt:
                 cross_pixel_count = np.count_nonzero((cnt[:, 0] == cross_pixel).all(axis=1)) #行方向に対して配列ごとに一致しているかどうかをBooleanで判断し、Trueの数を数える
                 # print((cnt[:,0] == cross_pixel).all(axis=1))
-                if cross_pixel_count != 0: #速くなったりしないかな
-                    cross_count += cross_pixel_count
-            if correlation_list == None or cross_count > correlation_list[3]:
+                cross_count += cross_pixel_count
+            if correlation_list is None or cross_count > correlation_list[3]:
                 correlation_list = [cnt, cross_cnt, x, cross_count]
 
         datetime_number, _ = os.path.splitext(os.path.basename(fname))
@@ -231,14 +261,6 @@ def plot(master_path, csv_path, target):
     y2 = np.array(sorted_master_data)[:,7]
     x3 = []
     y3 = []
-    x3_1 = []
-    x3_2 = []
-    x3_3 = []
-    x3_4 = []
-    y3_1 = []
-    y3_2 = []
-    y3_3 = []
-    y3_4 = []
     x4 = np.array(experiment_data)[:,0]
     y4_1 = np.array(experiment_data)[:,1]
     y4_2 = np.array(experiment_data)[:,2]
@@ -249,19 +271,6 @@ def plot(master_path, csv_path, target):
             if c_row[6] == m_row[6]:
                 x3.append(c_row[7])
                 y3.append(m_row[7])
-                if target == "long-bubble":
-                    if  0 <= c_row[6] < 660:
-                        x3_1.append(c_row[7])
-                        y3_1.append(m_row[7])
-                    elif 660 <= c_row[6] < 1140:
-                        x3_2.append(c_row[7])
-                        y3_2.append(m_row[7])
-                    elif 1140 <= c_row[6] < 1740:
-                        x3_3.append(c_row[7])
-                        y3_3.append(m_row[7])
-                    elif 1740 <= c_row[6] <= 2220:
-                        x3_4.append(c_row[7])
-                        y3_4.append(m_row[7])
 
     r              = np.corrcoef(np.array(x3), np.array(y3))[0,1]
     (a, b, sa, sb) = least_square(np.array(x3), np.array(y3))
@@ -273,7 +282,6 @@ def plot(master_path, csv_path, target):
     fig2 = plt.figure()
     fig3 = plt.figure()
     fig4 = plt.figure()
-    fig5 = plt.figure()
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
@@ -314,34 +322,6 @@ def plot(master_path, csv_path, target):
     ax5.set_ylabel('tilt value [arc-sec]')
     ax5.grid(axis='y')
     ax5.legend(['tilt-long', 'tilt-cross'])
-
-    ax6 = fig5.add_subplot(2, 2, 1)
-    ax6.scatter(np.array(x3_1), np.array(y3_1), color="pink" ,label="±0 -> +100")
-    ax6.set_xlim([-2.5, 2.5])
-    ax6.set_ylim([-120, 120])
-    ax6.grid(axis='both')
-    ax6.legend()
-
-    ax7 = fig5.add_subplot(2, 2, 2)
-    ax7.scatter(np.array(x3_2), np.array(y3_2), color="yellow", label="+100 -> ±0")
-    ax7.set_xlim([-2.5, 2.5])
-    ax7.set_ylim([-120, 120])
-    ax7.grid(axis='both')
-    ax7.legend()
-
-    ax8 = fig5.add_subplot(2, 2, 3)
-    ax8.scatter(np.array(x3_3), np.array(y3_3), color="purple", label="±0 -> -100")
-    ax8.set_xlim([-2.5, 2.5])
-    ax8.set_ylim([-120, 120])
-    ax8.grid(axis='both')
-    ax8.legend()
-
-    ax9 = fig5.add_subplot(2, 2, 4)
-    ax9.scatter(np.array(x3_4), np.array(y3_4), color="orange", label="-100 -> ±0")
-    ax9.set_xlim([-2.5, 2.5])
-    ax9.set_ylim([-120, 120]) 
-    ax9.grid(axis='both')  
-    ax9.legend()
 
     plt.show()
 
@@ -399,7 +379,7 @@ if __name__ == "__main__":
     if csv_files == []:
         target_cnt = None
         x_origin = None
-        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "needle_position", "movement", "corr_count"]]
+        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "bubble_position", "movement", "corr_count"]]
 
         for fname in tqdm(target_files): #決め打ち
             datetime_number, _ = os.path.splitext(os.path.basename(fname))
@@ -415,7 +395,7 @@ if __name__ == "__main__":
                 csv_lists.append(csv_list)
             else:
                 corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, created_datetime.second)
-                if corr_list != None:
+                if corr_list is not None:
                     position = bubble_position(fname, scales, corr_list, x_origin)
                     csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[0], corr_list[1]]
                     csv_lists.append(csv_list)
