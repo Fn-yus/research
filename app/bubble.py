@@ -275,7 +275,7 @@ if __name__ == "__main__":
                     csv_lists.append(csv_list)
 
         dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
-        csv_path = 'results/data/{}/{}.csv'.format(target, dt_now)
+        csv_path = '../results/data/{}/{}.csv'.format(target, dt_now)
         with open(csv_path, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(csv_lists)
