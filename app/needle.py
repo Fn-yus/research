@@ -8,7 +8,7 @@ import os
 import configparser
 import csv
 from tqdm import tqdm
-from plot import plot
+import plot
 
 def trimming(fname):
         img = cv2.imread(fname)
@@ -204,9 +204,9 @@ if __name__ == "__main__":
             writer = csv.writer(f)
             writer.writerows(csv_lists)
         print("\ncsvファイルが作成されました\nグラフを作成しています...")
-        plot(master_txt_path, csv_path, target)
+        plot.plot(master_txt_path, csv_path, target)
 
     else:
         print("csvファイルが既に存在しています\nグラフを作成しています...")
         csv_path = csv_files[-1]
-        plot(master_txt_path, csv_path, target)
+        plot.plot(master_txt_path, csv_path, target)

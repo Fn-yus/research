@@ -9,7 +9,7 @@ import configparser
 import csv
 from tqdm import tqdm
 from itertools import product
-from plot import plot
+import plot
 
 def trimming(fname):
     img = cv2.imread(fname)
@@ -280,11 +280,11 @@ if __name__ == "__main__":
             writer = csv.writer(f)
             writer.writerows(csv_lists)
 
-        plot(master_txt_path, csv_path, target)
+        plot.plot(master_txt_path, csv_path, target)
 
     else:
         csv_file = csv_files[-1]
-        plot(master_txt_path, csv_file, target)
+        plot.plot(master_txt_path, csv_file, target)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
