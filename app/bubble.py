@@ -166,9 +166,9 @@ def identify_bubble(fname, img_origin, img):
 def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_second):
     img_bubble_canny = None
     if "long-bubble" in fname.lower():
-        img_bubble_canny = cv2.Canny(img, 250, 550)
+        img_bubble_canny = cv2.Canny(img, 300, 750)
     elif "cross-bubble" in fname.lower():
-        img_bubble_canny = cv2.Canny(img, 150, 550)
+        img_bubble_canny = cv2.Canny(img, 200, 750)
     contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # 以下のループ処理はかなり重いと予想されるため、findContoursの第3引数をcv2.CHAIN_APPBOX_SIMPLEにすることも考える(精度に関しては要検証)
