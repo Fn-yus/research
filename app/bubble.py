@@ -103,8 +103,7 @@ def identify_bubble(fname, img_origin, img):
     if "long-bubble" in fname.lower():
         contours_for_loop = contours
     elif "cross-bubble" in fname.lower():
-        ndarray_contours = np.array(contours)
-        filtered_contours = np.concatenate([contours[4], contours[8]])
+        filtered_contours = np.concatenate([contours[4], contours[8], contours[10]])
         contours_for_loop = [filtered_contours]
 
     cnt_list = None        
