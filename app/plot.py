@@ -50,7 +50,7 @@ def plot(master_file_path, csv_file_path, target):
     x4 = np.array(experiment_data)[:,0]
     y4_1 = np.array(experiment_data)[:,1]
     y4_2 = np.array(experiment_data)[:,2]
-    y4_3 = np.array(experiment_data)[:,3]
+    y4_3 = np.array(experiment_data)[:,3]    
 
     for c_row in sorted_csv_data:
         for m_row in sorted_master_data:
@@ -68,6 +68,8 @@ def plot(master_file_path, csv_file_path, target):
     fig2 = plt.figure()
     fig3 = plt.figure()
     fig4 = plt.figure()
+    fig5 = plt.figure()
+    fig6 = plt.figure()
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
@@ -104,6 +106,12 @@ def plot(master_file_path, csv_file_path, target):
     ax5.set_ylabel('tilt value [arc-sec]')
     ax5.grid(axis='y')
     ax5.legend(['tilt-long', 'tilt-cross'])
+
+    ax6 = fig5.add_subplot(1, 1, 1)
+    ax6.plot(np.arange(len(x3)), x3)
+
+    ax7 = fig6.add_subplot(1, 1, 1)
+    ax7.plot(np.arange(len(y3)), y3)
 
     plt.show()
 
