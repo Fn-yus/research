@@ -29,16 +29,10 @@ def identify_scale(img, fname):
         lookuptable[i][0] = 255 * (float(i) / 255) ** (1.0 / gamma)
     
     img_darked = cv2.LUT(img, lookuptable)
-
-    #img_scale_mask = cv2.inRange(img_darked, (0, 0, 0), (40, 40, 40))  #黒色
-    #img_scale_masked = cv2.bitwise_and(img, img, mask=img_scale_mask) #元画像とマスク画像の共通部分を抽出
-
     cv2.imwrite('../results/pictures/bubble/img_darked.jpg', img_darked)
 
     img_gray = cv2.cvtColor(img_darked, cv2.COLOR_BGR2GRAY) #グレースケール化
     img_gray_denoised = cv2.fastNlMeansDenoising(img_gray)
-    #img_canny = cv2.Canny(img_gray_denoised, 300, 350)  #要調整
-    #img_canny2 = cv2.bitwise_not(img_canny)
     ret, img_thresh = cv2.threshold(img_gray_denoised, 15, 255, cv2.THRESH_BINARY)
     img_thresh_canny = cv2.Canny(img_thresh, 0, 100)
     img_thresh_canny2 = cv2.bitwise_not(img_thresh_canny)
@@ -55,7 +49,6 @@ def identify_scale(img, fname):
                 if min(np.diff(black_list[0::2])) > 20: #目盛り間の幅が20ピクセル以上
                     if black_list[8] - black_list[7] > 150: #左側と右側の目盛りのギャップを確実に
                         scale_list.append(black_list)
-                        # print(black_list)
 
     if len(scale_list) == 0:
         for row in img_thresh:
@@ -70,8 +63,6 @@ def identify_scale(img, fname):
     scale_list_splited = np.split(np.array(scale_list), 8)  #目盛りの左右の線ごとにまとめる
     scales = [np.mean(row) for row in scale_list_splited]   #目盛りの左右の線の平均を取り、scalesにappend
 
-    # print(scales)
-
     for i in scales:
         cv2.line(img, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
     
@@ -81,17 +72,11 @@ def identify_scale(img, fname):
     return scales, img_gray_denoised
 
 def identify_bubble(fname, img_origin, img):
-    # ret, img_bubble_thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
-    # img_bubble_thresh_canny = cv2.Canny(img_bubble_thresh, 0, 100)
     img_bubble_canny = None
     if "long-bubble" in fname.lower():
         img_bubble_canny = cv2.Canny(img, 250, 550)
     elif "cross-bubble" in fname.lower():
         img_bubble_canny = cv2.Canny(img, 250, 550)
-    # cv2.imwrite('results/pictures/bubble/img_bubble_thresh.jpg', img_bubble_thresh)
-    # cv2.imwrite('results/pictures/bubble/img_bubble_thresh_canny.jpg', img_bubble_thresh_canny)
-    # cv2.imwrite('results/pictures/bubble/img_gray_denoised.jpg', img)
-    # cv2.imwrite('results/pictures/bubble/img_bubble_canny.jpg', img_bubble_canny)
 
     contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # print(contours)
@@ -111,11 +96,7 @@ def identify_bubble(fname, img_origin, img):
     for cnt in contours_for_loop:
         if len(cnt) >= 5: #cv2.fitEllipseは、最低5つの点がないとエラーを起こすため
             (x, y), (long_rad, short_rad), angle = cv2.fitEllipse(cnt) #(x,y)は楕円の中心の座標、(MA, ma)はそれぞれ長径,短径、angleは楕円の向き(0≤angle≤180, 0が鉛直方向)
-            # img_all_contour = cv2.ellipse(img_origin, ((x, y), (long_rad, short_rad), angle), (0,255,0), 2)
-            # print(ellipse)
             if 80 < angle < 100 and long_rad >= 10 and short_rad >= 10: #楕円の向きを絞り,直線を近似しているものは排除する
-                # print([x, y, long_rad, short_rad])
-                # print(cnt[:, 0, 0]) 
                 cnt_left_edge  = min(cnt[:,0,0]) #3次元numpy配列になっている（[[[a, b]], [[c, d]]]という形）
                 cnt_right_edge = max(cnt[:,0,0])
                 cnt_upper_edge = min(cnt[:,0,1])
@@ -129,35 +110,10 @@ def identify_bubble(fname, img_origin, img):
                     cnt_list = [cnt, x_cal, cnt_RMS]
                 else:
                     continue
-                # elif "cross-bubble" in fname.lower():
-                #     if cnt_first_list == None:
-                #         cnt_first_list = [cnt, x_cal, cnt_RMS]
-                #     elif cnt_second_list == None:
-                #         if cnt_RMS < cnt_first_list[1]:
-                #             cnt_second_list = cnt_first_list
-                #             cnt_first_list = [cnt, x_cal, cnt_RMS]
-                #         else:
-                #             cnt_second_list = [cnt, x_cal, cnt_RMS]
-                #     elif cnt_RMS < cnt_first_list[1]:
-                #         cnt_second_list = cnt_first_list
-                #         cnt_first_list = [cnt, x_cal, cnt_RMS]
-                #     elif cnt_RMS < cnt_second_list[1]:
-                #         cnt_second_list = [cnt, x_cal, cnt_RMS]
-                #     else:
-                #         continue
-
-#    if "cross-bubble" in fname.lower():
-#        with open('a.csv', 'w', newline='') as f:
-#            writer = csv.writer(f)
-#            writer.writerows(contours)
 
     target_cnt = cnt_list[0][:,0] #3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
     img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (255, 0, 0), 1)
         
-    # print(cnt_list)
-    # print(target_cnt)
-    # cv2.imwrite('results/pictures/bubble/img_all_contour.jpg', img_all_contour)
-
     cv2.imwrite('../results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
     return target_cnt, cnt_list[1]
