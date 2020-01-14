@@ -2,6 +2,7 @@ from decimal import Decimal, getcontext, ROUND_HALF_UP
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+import inverse
 
 def plot(master_file_path, csv_file_path, target):
     master_data = np.loadtxt(master_file_path, encoding='utf-8')
@@ -28,9 +29,9 @@ def plot(master_file_path, csv_file_path, target):
         target_time  = datetime(row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6])
         if start_time <= target_time <= end_time:
             if "long" in target.lower():
-                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379])
+                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[8]/15.379, row[7]])
             elif "cross" in target.lower():
-                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[9]/17.107])
+                sorted_master_data.append([row_schedule[0], row_schedule[1], row_schedule[2], row_schedule[4], row_schedule[5], row_schedule[6], (target_time - start_time).total_seconds(), row[9]/17.107, row[7]])
 
         experiment_start_time = datetime(2019, 7, 16, 13, 21, 00)
         long_end_time         = datetime(2019, 7, 16, 13, 58, 00)
@@ -60,6 +61,9 @@ def plot(master_file_path, csv_file_path, target):
 
     r              = np.corrcoef(np.array(x3), np.array(y3))[0,1]
     (a, b, sa, sb) = __least_square(np.array(x3), np.array(y3))
+
+    coefficient_data = [a, b, sa, sb]    
+    inverse.inverse(np.array(sorted_master_data), np.array(sorted_csv_data), np.array(coefficient_data))
 
     graph_target = target.replace("-", "_")        #返り値例 "long_needle" 
     target_sort  = target.replace(target[-7:], "")  #返り値は "long" か "cross"
