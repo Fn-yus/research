@@ -54,10 +54,14 @@ def plot(master_file_path, csv_file_path, target):
     y4_3 = np.array(experiment_data)[:,3]    
 
     for c_row in sorted_csv_data:
+        tmp_tilt = []
         for m_row in sorted_master_data:
             if c_row[6] == m_row[6]:
+                tmp_tilt.append(m_row[7])
+            if m_row == sorted_master_data[-1]:
                 x3.append(c_row[7])
-                y3.append(m_row[7])
+                y3.append(np.mean(tmp_tilt))
+                tmp_tilt = [] # 初期化
 
     r              = np.corrcoef(np.array(x3), np.array(y3))[0,1]
     (a, b, sa, sb) = __least_square(np.array(x3), np.array(y3))
@@ -69,7 +73,7 @@ def plot(master_file_path, csv_file_path, target):
     [E, F, G, H] = m_dict['digital_m']
     y5 = np.array([A + B * csv_list[6] + C * (a * csv_list[7] + b) + D * ((a * csv_list[7] + b) ** 2) for csv_list in sorted_csv_data])
     y6 = np.array([E + F * master_list[6] + G * master_list[7] + H * (master_list[7] ** 2) for master_list in sorted_master_data])
-    
+
     graph_target = target.replace("-", "_")        #返り値例 "long_needle" 
     target_sort  = target.replace(target[-7:], "")  #返り値は "long" か "cross"
 
@@ -81,6 +85,8 @@ def plot(master_file_path, csv_file_path, target):
     fig6 = plt.figure()
     fig7 = plt.figure()
     fig8 = plt.figure()
+    fig9 = plt.figure(figsize=[19.2, 4.8])
+    fig10 = plt.figure(figsize=[19.2, 4.8])
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
@@ -105,44 +111,99 @@ def plot(master_file_path, csv_file_path, target):
     ax3.set_ylabel('tilt-{} value [arc-sec]'.format(target_sort))
     ax3.grid(axis='both')
 
-    ax4 = fig4.add_subplot(2, 1, 1)
-    ax4.plot(x4, y4_1)
-    ax4.set_ylabel('Gravity [mGal]')
-    ax4.grid(axis='y')
+    ax4_1 = fig4.add_subplot(2, 1, 1)
+    ax4_1.plot(x4, y4_1)
+    ax4_1.set_ylabel('Gravity [mGal]')
+    ax4_1.grid(axis='y')
 
-    ax5 = fig4.add_subplot(2, 1, 2)
-    ax5.plot(x4, y4_2)
-    ax5.plot(x4, y4_3)
-    ax5.set_xlabel('t [s]')
-    ax5.set_ylabel('tilt value [arc-sec]')
-    ax5.grid(axis='y')
-    ax5.legend(['tilt-long', 'tilt-cross'])
+    ax4_2 = fig4.add_subplot(2, 1, 2)
+    ax4_2.plot(x4, y4_2)
+    ax4_2.plot(x4, y4_3)
+    ax4_2.set_xlabel('t [s]')
+    ax4_2.set_ylabel('tilt value [arc-sec]')
+    ax4_2.grid(axis='y')
+    ax4_2.legend(['tilt-long', 'tilt-cross'])
 
-    ax6 = fig5.add_subplot(1, 1, 1)
-    ax6.plot(np.arange(len(x3)), x3)
+    ax5 = fig5.add_subplot(1, 1, 1)
+    ax5.plot(np.arange(len(x3)), x3)
 
-    ax7 = fig6.add_subplot(1, 1, 1)
-    ax7.plot(np.arange(len(y3)), y3)
+    ax6 = fig6.add_subplot(1, 1, 1)
+    ax6.plot(np.arange(len(y3)), y3)
 
-    ax8 = fig7.add_subplot(1, 1, 1)
-    ax8.plot(x1, y5) # label="y={}+{}t+{}x(t)+{}x(t)^2".format(A, B, C, D))
+    ax7 = fig7.add_subplot(1, 1, 1)
+    ax7.plot(x1, y5) # label="y={}+{}t+{}x(t)+{}x(t)^2".format(A, B, C, D))
     # ax8.legend()
+    if "long" in target.lower():
+        ax7.set_ylim(6200, 6400)
+    elif "cross" in target.lower():
+        ax7.set_ylim(6300, 6500)
+    ax7.grid(axis='both')
+
+    ax8 = fig8.add_subplot(1, 1, 1)
+    ax8.plot(x2, y6) # label="y={}+{}t+{}x(t)+{}x(t)^2".format(E, F, G, H))
+    # ax9.legend()
     if "long" in target.lower():
         ax8.set_ylim(6200, 6400)
     elif "cross" in target.lower():
         ax8.set_ylim(6300, 6500)
     ax8.grid(axis='both')
 
-    ax9 = fig8.add_subplot(1, 1, 1)
-    ax9.plot(x2, y6) # label="y={}+{}t+{}x(t)+{}x(t)^2".format(E, F, G, H))
-    # ax9.legend()
-    if "long" in target.lower():
-        ax9.set_ylim(6200, 6400)
-    elif "cross" in target.lower():
-        ax9.set_ylim(6300, 6500)
-    ax9.grid(axis='both')
+    fig9.suptitle(target.replace("-", "(").capitalize() + ")", fontsize=20, fontweight='black')
 
-    plt.show()
+    ax9_1 = fig9.add_subplot(1, 3, 1)
+    y9_1 = a * np.array(sorted_csv_data)[:,7] + b
+    ax9_1.scatter(x1, y9_1)
+    ax9_1.set_xlabel("t [s]")
+    ax9_1.set_ylabel("x(t) [arc-sec]")
+    ax9_1.grid(axis='both')
+
+    ax9_2 = fig9.add_subplot(1, 3, 2)
+    y9_2 = np.array(sorted_master_data)[:,8] * 1000
+    ax9_2.plot(x2, y9_2, color='gray', alpha=0.5, label='g_obs(t)')
+    ax9_2.scatter(x1, y5, alpha=0.7, label='g_cal(t)')
+    ax9_2.plot(x1, A + x1 * B, color='red', alpha=0.5, label='a: {}, \nb: {}'.format(round(A, 0), round(B, 4)))
+    ax9_2.set_xlabel("t [s]")
+    ax9_2.set_ylabel("g(t) [mGal]")
+    ax9_2.grid(axis='both')
+    ax9_2.legend(loc='upper left')
+
+    ax9_3 = fig9.add_subplot(1, 3, 3)
+    ax9_3.scatter(y9_1, C * y9_1 + D * (y9_1 ** 2), label='c: {}, \nd: {}'.format(round(C, 4), round(D, 4)))
+    ax9_3.set_xlabel("x(t) [arc-sec]")
+    ax9_3.set_ylabel("g(t) [mGal]")
+    ax9_3.grid(axis='both')
+    ax9_3.legend(loc='upper left')
+
+    fig9.savefig('../results/graph/{}.png'.format(target.replace("-", "(").capitalize() + ")"), bbox_inches='tight')
+
+    fig10.suptitle("{}(digital)".format(target_sort).capitalize(), fontsize=20, fontweight='black')
+
+    ax10_1 = fig10.add_subplot(1, 3, 1)
+    ax10_1.plot(x2, y2)
+    ax10_1.set_xlabel("t [s]")
+    ax10_1.set_ylabel("x(t) [arc-sec]")
+    ax10_1.grid(axis='both')
+
+    ax10_2 = fig10.add_subplot(1, 3, 2)
+    ax10_2.plot(x2, y9_2, color='gray', alpha=0.5, label='g_obs(t)')
+    ax10_2.plot(x2, y6, alpha=0.7, label='g_cal(t)')
+    ax10_2.plot(x2, E + x2 * F, color='red', alpha=0.5, label='a: {}, \nb: {}'.format(round(E, 0), round(F, 4)))
+    ax10_2.set_xlabel("t [s]")
+    ax10_2.set_ylabel("g(t) [mGal]")
+    ax10_2.grid(axis='both')
+    ax10_2.legend(loc='upper left')
+
+    ax10_3 = fig10.add_subplot(1, 3, 3)
+    ax10_3.plot(y2, G * y2 + H * (y2 ** 2), label='c: {}, \nd: {}'.format(round(G, 4), round(H, 4)))
+    ax10_3.set_xlabel("x(t) [arc-sec]")
+    ax10_3.set_ylabel("g(t) [mGal]")
+    ax10_3.grid(axis='both')
+    ax10_3.legend(loc='upper left')
+    
+    fig10.savefig('../results/graph/{}.png'.format("{}(digital)".format(target_sort).capitalize()), bbox_inches='tight')
+
+    # plt.show()
+
 
 def __least_square(x, y):
     xy = x * y

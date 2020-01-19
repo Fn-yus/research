@@ -34,7 +34,7 @@ def main(master_data, csv_data, coefficient_data):
     dig_m = __inverse(np.array(dig_d), np.array(dig_G))
     print(dig_m)
 
-    return {'analog_m': m, 'digital_m': dig_m}
+    return {'analog_m': m, 'digital_m': dig_m, 'gravity_per_minute': G}
 
 def __inverse(d, G):
     G_square = G.transpose() @ G
