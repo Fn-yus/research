@@ -155,6 +155,11 @@ def plot(master_file_path, csv_file_path, target):
     ax9_1.scatter(x1, y9_1)
     ax9_1.set_xlabel("t [s]")
     ax9_1.set_ylabel("x(t) [arc-sec]")
+    ax9_1.set_xlim(-100, 2125)
+    if "long" in target.lower():
+        ax9_1.set_ylim(-100, 120)
+    elif "cross" in target.lower():
+        ax9_1.set_ylim(-120, 120)
     ax9_1.grid(axis='both')
 
     ax9_2 = fig9.add_subplot(1, 3, 2)
@@ -164,6 +169,12 @@ def plot(master_file_path, csv_file_path, target):
     ax9_2.plot(x1, A + x1 * B, color='red', alpha=0.5, label='a: {}, \nb: {}'.format(round(A, 0), round(B, 4)))
     ax9_2.set_xlabel("t [s]")
     ax9_2.set_ylabel("g(t) [mGal]")
+    if "long" in target.lower():
+        ax9_2.set_xlim(-100, 2400)
+        ax9_2.set_ylim(6230, 6400)
+    elif "cross" in target.lower():
+        ax9_2.set_xlim(-100, 2100)
+        ax9_2.set_ylim(6330, 6500)
     ax9_2.grid(axis='both')
     ax9_2.legend(loc='upper left')
 
@@ -171,6 +182,8 @@ def plot(master_file_path, csv_file_path, target):
     ax9_3.scatter(y9_1, C * y9_1 + D * (y9_1 ** 2), label='c: {}, \nd: {}'.format(round(C, 4), round(D, 4)))
     ax9_3.set_xlabel("x(t) [arc-sec]")
     ax9_3.set_ylabel("g(t) [mGal]")
+    ax9_3.set_xlim(-120, 120)
+    ax9_3.set_ylim(-130, 5)
     ax9_3.grid(axis='both')
     ax9_3.legend(loc='upper left')
 
@@ -182,6 +195,11 @@ def plot(master_file_path, csv_file_path, target):
     ax10_1.plot(x2, y2)
     ax10_1.set_xlabel("t [s]")
     ax10_1.set_ylabel("x(t) [arc-sec]")
+    ax10_1.set_xlim(-100, 2125)
+    if "long" in target.lower():
+        ax10_1.set_ylim(-100, 120)
+    elif "cross" in target.lower():
+        ax10_1.set_ylim(-120, 120)
     ax10_1.grid(axis='both')
 
     ax10_2 = fig10.add_subplot(1, 3, 2)
@@ -190,6 +208,12 @@ def plot(master_file_path, csv_file_path, target):
     ax10_2.plot(x2, E + x2 * F, color='red', alpha=0.5, label='a: {}, \nb: {}'.format(round(E, 0), round(F, 4)))
     ax10_2.set_xlabel("t [s]")
     ax10_2.set_ylabel("g(t) [mGal]")
+    if "long" in target.lower():
+        ax10_2.set_xlim(-100, 2400)
+        ax10_2.set_ylim(6230, 6400)
+    elif "cross" in target.lower():
+        ax10_2.set_xlim(-100, 2100)
+        ax10_2.set_ylim(6330, 6500)
     ax10_2.grid(axis='both')
     ax10_2.legend(loc='upper left')
 
@@ -197,6 +221,8 @@ def plot(master_file_path, csv_file_path, target):
     ax10_3.plot(y2, G * y2 + H * (y2 ** 2), label='c: {}, \nd: {}'.format(round(G, 4), round(H, 4)))
     ax10_3.set_xlabel("x(t) [arc-sec]")
     ax10_3.set_ylabel("g(t) [mGal]")
+    ax10_3.set_xlim(-120, 120)
+    ax10_3.set_ylim(-130, 5)
     ax10_3.grid(axis='both')
     ax10_3.legend(loc='upper left')
     
