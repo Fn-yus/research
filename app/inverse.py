@@ -1,6 +1,6 @@
 import numpy as np
 
-def inverse(master_data, csv_data, coefficient_data):
+def main(master_data, csv_data, coefficient_data):
     # master_data = ["年", "月", "日", "時", "分", "秒(小数点以下切り捨て)", "実験開始からの経過秒", "傾斜値[arc-sec]", "重力値[mGal]"]
     # csv_data = ["年", "月", "日", "時", "分", "秒(小数点以下切り捨て)", "実験開始からの経過秒", "傾斜値[div]"]
     # coefficient_data = [a, b, sa, sb] (単位は全て[arc-sec/div])
@@ -24,18 +24,19 @@ def inverse(master_data, csv_data, coefficient_data):
                 d.append(tmp_average_gravity)
                 tmp_gravity_list = [] # 初期化
     
-    m = __calculate_m(np.array(d), np.array(G))
+    m = __inverse(np.array(d), np.array(G))
     print(m)
 
     # 電子データに対して傾斜量を求める
-    dig_d = master_data[:,8] * 1000 #mGal -> μGal
+    dig_d = master_data[:,8] * 1000 # mGal -> μGal
     dig_G = [[1, master_list[6], master_list[7], master_list[7] ** 2] for master_list in master_data]
 
-    dig_m = __calculate_m(np.array(dig_d), np.array(dig_G))
+    dig_m = __inverse(np.array(dig_d), np.array(dig_G))
     print(dig_m)
 
+    return {'analog_m': m, 'digital_m': dig_m}
 
-def __calculate_m(d, G):
+def __inverse(d, G):
     G_square = G.transpose() @ G
     G_square_inv = np.linalg.inv(G_square)
     return G_square_inv @ G.transpose() @ d

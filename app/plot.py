@@ -63,8 +63,13 @@ def plot(master_file_path, csv_file_path, target):
     (a, b, sa, sb) = __least_square(np.array(x3), np.array(y3))
 
     coefficient_data = [a, b, sa, sb]    
-    inverse.inverse(np.array(sorted_master_data), np.array(sorted_csv_data), np.array(coefficient_data))
+    m_dict = inverse.main(np.array(sorted_master_data), np.array(sorted_csv_data), np.array(coefficient_data))
 
+    [A, B, C, D] = m_dict['analog_m']
+    [E, F, G, H] = m_dict['digital_m']
+    y5 = np.array([A + B * csv_list[6] + C * (a * csv_list[7] + b) + D * ((a * csv_list[7] + b) ** 2) for csv_list in sorted_csv_data])
+    y6 = np.array([E + F * master_list[6] + G * master_list[7] + H * (master_list[7] ** 2) for master_list in sorted_master_data])
+    
     graph_target = target.replace("-", "_")        #返り値例 "long_needle" 
     target_sort  = target.replace(target[-7:], "")  #返り値は "long" か "cross"
 
@@ -74,6 +79,8 @@ def plot(master_file_path, csv_file_path, target):
     fig4 = plt.figure()
     fig5 = plt.figure()
     fig6 = plt.figure()
+    fig7 = plt.figure()
+    fig8 = plt.figure()
 
     ax1 = fig1.add_subplot(1, 1, 1)
     ax1.scatter(x1, y1)
@@ -116,6 +123,24 @@ def plot(master_file_path, csv_file_path, target):
 
     ax7 = fig6.add_subplot(1, 1, 1)
     ax7.plot(np.arange(len(y3)), y3)
+
+    ax8 = fig7.add_subplot(1, 1, 1)
+    ax8.plot(x1, y5) # label="y={}+{}t+{}x(t)+{}x(t)^2".format(A, B, C, D))
+    # ax8.legend()
+    if "long" in target.lower():
+        ax8.set_ylim(6200, 6400)
+    elif "cross" in target.lower():
+        ax8.set_ylim(6300, 6500)
+    ax8.grid(axis='both')
+
+    ax9 = fig8.add_subplot(1, 1, 1)
+    ax9.plot(x2, y6) # label="y={}+{}t+{}x(t)+{}x(t)^2".format(E, F, G, H))
+    # ax9.legend()
+    if "long" in target.lower():
+        ax9.set_ylim(6200, 6400)
+    elif "cross" in target.lower():
+        ax9.set_ylim(6300, 6500)
+    ax9.grid(axis='both')
 
     plt.show()
 
