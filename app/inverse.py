@@ -25,14 +25,14 @@ def main(master_data, csv_data, coefficient_data):
                 tmp_gravity_list = [] # 初期化
     
     m = __inverse(np.array(d), np.array(G))
-    print(m)
+    print("analog_m:", m)
 
     # 電子データに対して傾斜量を求める
     dig_d = master_data[:,8] * 1000 # mGal -> μGal
     dig_G = [[1, master_list[6], master_list[7], master_list[7] ** 2] for master_list in master_data]
 
     dig_m = __inverse(np.array(dig_d), np.array(dig_G))
-    print(dig_m)
+    print("digital_m:", dig_m)
 
     return {'analog_m': m, 'digital_m': dig_m, 'gravity_per_minute': G}
 
