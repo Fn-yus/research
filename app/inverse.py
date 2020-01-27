@@ -24,19 +24,24 @@ def main(master_data, csv_data, coefficient_data):
                 d.append(tmp_average_gravity)
                 tmp_gravity_list = [] # 初期化
     
-    m = __inverse(np.array(d), np.array(G))
-    print("analog_m:", m)
+    m, dm = __inverse(np.array(d), np.array(G))
 
     # 電子データに対して傾斜量を求める
     dig_d = master_data[:,8] * 1000 # mGal -> μGal
     dig_G = [[1, master_list[6], master_list[7], master_list[7] ** 2] for master_list in master_data]
 
-    dig_m = __inverse(np.array(dig_d), np.array(dig_G))
-    print("digital_m:", dig_m)
+    dig_m, ddig_m = __inverse(np.array(dig_d), np.array(dig_G))
 
-    return {'analog_m': m, 'digital_m': dig_m, 'gravity_per_minute': G}
+    return {'analog_m': m, 'digital_m': dig_m, 'd_analog_m': dm, 'd_digital_m': ddig_m, 'gravity_per_minute': G}
 
 def __inverse(d, G):
     G_square = G.transpose() @ G
     G_square_inv = np.linalg.inv(G_square)
-    return G_square_inv @ G.transpose() @ d
+    m = G_square_inv @ G.transpose() @ d
+
+    N = G.shape[0]
+    M = G.shape[1]
+    Cm = (1 / (N - M)) * ((d - G @ m) @ (d - G @ m)) * G_square_inv
+    error_list = np.sqrt(np.diag(Cm))
+
+    return m, error_list

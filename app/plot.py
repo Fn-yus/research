@@ -69,8 +69,8 @@ def plot(master_file_path, csv_file_path, target):
     coefficient_data = [a, b, sa, sb]    
     m_dict = inverse.main(np.array(sorted_master_data), np.array(sorted_csv_data), np.array(coefficient_data))
 
-    [A, B, C, D] = m_dict['analog_m']
-    [E, F, G, H] = m_dict['digital_m']
+    [A, B, C, D], [dA, dB, dC, dD] = __calculate_error(m_dict['analog_m'], m_dict['d_analog_m'])
+    [E, F, G, H], [dE, dF, dG, dH] = __calculate_error(m_dict['digital_m'], m_dict['d_digital_m'])
     y5 = np.array([A + B * csv_list[6] + C * (a * csv_list[7] + b) + D * ((a * csv_list[7] + b) ** 2) for csv_list in sorted_csv_data])
     y6 = np.array([E + F * master_list[6] + G * master_list[7] + H * (master_list[7] ** 2) for master_list in sorted_master_data])
 
@@ -166,9 +166,8 @@ def plot(master_file_path, csv_file_path, target):
     y9_2 = np.array(sorted_master_data)[:,8] * 1000
     ax9_2.plot(x2, y9_2, color='gray', alpha=0.5, label='g_obs(t)')
     ax9_2.scatter(x1, y5, alpha=0.7, label='g_cal(t)')
-    ax9_2.plot(x1, A + x1 * B, color='red', alpha=0.5, label='a: {}, \nb: {}'.format(round(A, 0), round(B, 4)))
-    ax9_2.set_xlabel("t [s]")
-    ax9_2.set_ylabel("g(t) [mGal]")
+    ax9_2.plot(x1, A + x1 * B, color='red', alpha=0.5, label='a: {} ± {}, \nb: {} ± {}'.format(A, dA, B, dB))
+    ax9_2.set_ylabel("g(t) [μGal]")
     if "long" in target.lower():
         ax9_2.set_xlim(-100, 2400)
         ax9_2.set_ylim(6230, 6400)
@@ -179,9 +178,9 @@ def plot(master_file_path, csv_file_path, target):
     ax9_2.legend(loc='upper left')
 
     ax9_3 = fig9.add_subplot(1, 3, 3)
-    ax9_3.scatter(y9_1, C * y9_1 + D * (y9_1 ** 2), label='c: {}, \nd: {}'.format(round(C, 4), round(D, 4)))
+    ax9_3.scatter(y9_1, C * y9_1 + D * (y9_1 ** 2), label='c: {} ± {}, \nd: {} ± {}'.format(C, dC, D, dD))
     ax9_3.set_xlabel("x(t) [arc-sec]")
-    ax9_3.set_ylabel("g(t) [mGal]")
+    ax9_3.set_ylabel("g(t) [μGal]")
     ax9_3.set_xlim(-120, 120)
     ax9_3.set_ylim(-130, 5)
     ax9_3.grid(axis='both')
@@ -205,9 +204,9 @@ def plot(master_file_path, csv_file_path, target):
     ax10_2 = fig10.add_subplot(1, 3, 2)
     ax10_2.plot(x2, y9_2, color='gray', alpha=0.5, label='g_obs(t)')
     ax10_2.plot(x2, y6, alpha=0.7, label='g_cal(t)')
-    ax10_2.plot(x2, E + x2 * F, color='red', alpha=0.5, label='a: {}, \nb: {}'.format(round(E, 0), round(F, 4)))
+    ax10_2.plot(x2, E + x2 * F, color='red', alpha=0.5, label='a: {} ± {}, \nb: {} ± {}'.format(E, dE, F, dF))
     ax10_2.set_xlabel("t [s]")
-    ax10_2.set_ylabel("g(t) [mGal]")
+    ax10_2.set_ylabel("g(t) [μGal]")
     if "long" in target.lower():
         ax10_2.set_xlim(-100, 2400)
         ax10_2.set_ylim(6230, 6400)
@@ -218,9 +217,9 @@ def plot(master_file_path, csv_file_path, target):
     ax10_2.legend(loc='upper left')
 
     ax10_3 = fig10.add_subplot(1, 3, 3)
-    ax10_3.plot(y2, G * y2 + H * (y2 ** 2), label='c: {}, \nd: {}'.format(round(G, 4), round(H, 4)))
+    ax10_3.plot(y2, G * y2 + H * (y2 ** 2), label='c: {} ± {}, \nd: {} ± {}'.format(G, dG, H, dH))
     ax10_3.set_xlabel("x(t) [arc-sec]")
-    ax10_3.set_ylabel("g(t) [mGal]")
+    ax10_3.set_ylabel("g(t) [μGal]")
     ax10_3.set_xlim(-120, 120)
     ax10_3.set_ylim(-130, 5)
     ax10_3.grid(axis='both')
@@ -252,3 +251,24 @@ def __least_square(x, y):
     b = Decimal(b).quantize(sb)
 
     return float(a), float(b), float(sa), float(sb)
+
+def __calculate_error(m, dm):
+    m_list = []
+    dm_list = []
+
+    for val, err in zip(m, dm):
+        getcontext().prec = 1
+        getcontext().rounding = ROUND_HALF_UP
+        dec_err = Decimal(err) * Decimal(1) #誤差を有効数字1桁に
+
+        getcontext().prec = 28
+        dec_val = Decimal(val).quantize(dec_err)
+
+        if float(dec_err).is_integer():
+            m_list.append(int(dec_val))
+            dm_list.append(int(dec_err))
+        else:
+            m_list.append(float(dec_val))
+            dm_list.append(float(dec_err))
+    
+    return m_list, dm_list
