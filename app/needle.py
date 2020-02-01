@@ -133,8 +133,8 @@ def digitalize(needle, scales):
         needle_position = -3 + scales.index(needle)
         return needle_position
     else:
-        scale_upper_list, = np.where(needle <= scales)
-        scale_lower_list, = np.where(needle >= scales)
+        scale_upper_list, = np.where(needle < scales)
+        scale_lower_list, = np.where(needle > scales)
 
         if len(scale_upper_list)   == 0: #一番右の目盛りより右側に針がある場合
             return None

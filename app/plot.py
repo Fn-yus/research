@@ -173,7 +173,7 @@ def plot(master_file_path, csv_file_path, target):
         ax9_2.set_ylim(6230, 6400)
     elif "cross" in target.lower():
         ax9_2.set_xlim(-100, 2100)
-        ax9_2.set_ylim(6330, 6500)
+        ax9_2.set_ylim(6340, 6500)
     ax9_2.grid(axis='both')
     ax9_2.legend(loc='upper left')
 
@@ -212,7 +212,7 @@ def plot(master_file_path, csv_file_path, target):
         ax10_2.set_ylim(6230, 6400)
     elif "cross" in target.lower():
         ax10_2.set_xlim(-100, 2100)
-        ax10_2.set_ylim(6330, 6500)
+        ax10_2.set_ylim(6340, 6500)
     ax10_2.grid(axis='both')
     ax10_2.legend(loc='upper left')
 
