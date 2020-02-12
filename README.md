@@ -17,17 +17,15 @@ $ cd [directory name]
   
 ### [Create python virtual environment.](https://docs.python.org/ja/3/library/venv.html)
 
-```bash
-$ python -m venv [environment name]
-```
-  
 - Windows
 ```bash
+$ py -m venv [environment name]
 $ [environment name]\Scripts\activate
 ```
   
 - macOS, Linux
 ```bash
+$ python -m venv [environment name]
 $ source [environment name]/bin/activate
 ```  
   

@@ -22,3 +22,6 @@ results/pictures/contour/*
 results/pictures/canny/*
 results/pictures/wrapped/*
 results/graph/*
+
+# ignore virtual environment.
+lacoste
