@@ -4,6 +4,13 @@
 
 # SetUp
 
+### Clone this repository.
+
+```bash
+$ git clone https://github.com/Fn-yus/research.git
+```
+  
+  
 ### [Install Python if you don't.](https://www.python.org/downloads/)  
   
   
