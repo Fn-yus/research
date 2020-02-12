@@ -4,13 +4,6 @@
 
 # SetUp
 
-### Clone this repository.
-
-```bash
-$ git clone https://github.com/Fn-yus/research.git
-```
-  
-  
 ### [Install Python if you don't.](https://www.python.org/downloads/)  
   
   
@@ -20,6 +13,13 @@ $ git clone https://github.com/Fn-yus/research.git
 $ mkdir [diretcry name]
 $ cd [directory name]
 ```  
+  
+  
+### Clone this repository.
+
+```bash
+$ git clone https://github.com/Fn-yus/research.git
+```
   
   
 ### [Create python virtual environment.](https://docs.python.org/ja/3/library/venv.html)
