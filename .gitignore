@@ -4,12 +4,8 @@
 # ignore .pyc files
 __pycache__
 
-# ignore pictures except sample_1.jpg
-pictures/*
-!pictures/sample_1.jpg
-
-# ignore config file
-config.ini
+# ignore pictures vs
+pictures/.vs
 
 # ignore results
 results/data/long-needle/*
