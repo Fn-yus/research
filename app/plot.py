@@ -167,6 +167,7 @@ def plot(master_file_path, csv_file_path, target):
     ax9_2.plot(x2, y9_2, color='gray', alpha=0.5, label='g_obs(t)')
     ax9_2.scatter(x1, y5, alpha=0.7, label='g_cal(t)')
     ax9_2.plot(x1, A + x1 * B, color='red', alpha=0.5, label='a: {} ± {}, \nb: {} ± {}'.format(A, dA, B, dB))
+    ax9_2.set_xlabel("t [s]")
     ax9_2.set_ylabel("g(t) [μGal]")
     if "long" in target.lower():
         ax9_2.set_xlim(-100, 2400)
