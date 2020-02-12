@@ -1,1 +1,24 @@
-.vscode/settings.json
+# ignore python path
+.vscode
+
+# ignore .pyc files
+__pycache__
+
+# ignore pictures except sample_1.jpg
+pictures/*
+!pictures/sample_1.jpg
+
+# ignore config file
+config.ini
+
+# ignore results
+results/data/long-needle/*
+results/data/cross-needle/*
+results/data/long-bubble/*
+results/data/cross-bubble/*
+results/pictures/needle/*
+results/pictures/bubble/*
+results/pictures/contour/*
+results/pictures/canny/*
+results/pictures/wrapped/*
+results/graph/*
