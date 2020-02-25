@@ -9,8 +9,8 @@ import configparser
 import csv
 from tqdm import tqdm
 from itertools import product
-import plot
 
+# 画像のトリミング
 def trimming(fname):
     img = cv2.imread(fname)
     img_trimmed = None
@@ -20,8 +20,9 @@ def trimming(fname):
         img_trimmed = cv2.rotate(img[259:365, 120:515], cv2.ROTATE_180)
     return img_trimmed
 
+# 目盛りの検出
 def identify_scale(img, fname):   
-    cv2.imwrite('../results/pictures/bubble/img.jpg', img)
+    cv2.imwrite('results/pictures/bubble/img.jpg', img)
 
     gamma = 0.1
     lookuptable = np.zeros((256,1), dtype='uint8')
@@ -37,9 +38,9 @@ def identify_scale(img, fname):
     img_thresh_canny = cv2.Canny(img_thresh, 0, 100)
     img_thresh_canny2 = cv2.bitwise_not(img_thresh_canny)
 
-    cv2.imwrite('../results/pictures/bubble/img_gray.jpg', img_gray_denoised)
-    cv2.imwrite('../results/pictures/bubble/img_thresh.jpg', img_thresh)
-    cv2.imwrite('../results/pictures/bubble/img_thresh_canny.jpg', img_thresh_canny)    
+    cv2.imwrite('results/pictures/bubble/img_gray.jpg', img_gray_denoised)
+    cv2.imwrite('results/pictures/bubble/img_thresh.jpg', img_thresh)
+    cv2.imwrite('results/pictures/bubble/img_thresh_canny.jpg', img_thresh_canny)    
 
     scale_list = []
     for row in img_thresh_canny2:
@@ -66,11 +67,12 @@ def identify_scale(img, fname):
     for i in scales:
         cv2.line(img, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
     
-    cv2.imwrite('../results/pictures/bubble/img_thresh_canny2.jpg', img_thresh_canny2)
-    cv2.imwrite('../results/pictures/bubble/img_lined.jpg'.format(fname), img)
+    cv2.imwrite('results/pictures/bubble/img_thresh_canny2.jpg', img_thresh_canny2)
+    cv2.imwrite('results/pictures/bubble/img_lined.jpg'.format(fname), img)
 
     return scales, img_gray_denoised
 
+# 気泡の検出
 def identify_bubble(fname, img_origin, img):
     img_bubble_canny = None
     if "long-bubble" in fname.lower():
@@ -114,23 +116,18 @@ def identify_bubble(fname, img_origin, img):
     target_cnt = cnt_list[0][:,0] #3次元配列を2次元配列に（[[[a, b]], [[c, d]]] => [[a, b], [c,d]]）
     img_ellipse = cv2.drawContours(img_origin, [cnt_list[0]], 0, (255, 0, 0), 1)
         
-    cv2.imwrite('../results/pictures/bubble/img_ellipse.jpg', img_ellipse)
+    cv2.imwrite('results/pictures/bubble/img_ellipse.jpg', img_ellipse)
 
     return target_cnt, cnt_list[1]
 
+# 相互相関
 def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_second):
     img_bubble_canny = None
     if "long-bubble" in fname.lower():
         img_bubble_canny = cv2.Canny(img, 300, 750)
     elif "cross-bubble" in fname.lower():
         img_bubble_canny = cv2.Canny(img, 200, 750)
-    contours, _      = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # 以下のループ処理はかなり重いと予想されるため、findContoursの第3引数をcv2.CHAIN_APPBOX_SIMPLEにすることも考える(精度に関しては要検証)
-    # 2019/12/03 研究室PC, cv2.CHAIN_APPBOX_SIMPLE, (x, y) = (-100~100, -1~1)   で 69分予想（開始11分段階） -> 結果1時間ほどかかった
-    # 2019/12/03 研究室PC, cv2.CHAIN_APPROX_NONE,   (x, y) = (-100~100, -10~10) で 12時間かかった
-    # 2019/12/03 研究室PC, cv2.CHAIN_APPROX_NONE,   (x, y) = (-75~75,   0) で 25分
-    # 2019/12/03 研究室PC, cv2.CHAIN_APPROX_SIMPLE  (x, y) = (-75~75,   0) で 18分
+    contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     correlation_list = None
     if created_datetime_second >= 10:
@@ -151,12 +148,12 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
         datetime_number, _ = os.path.splitext(os.path.basename(fname))
 
         img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
-        cv2.imwrite('../results/pictures/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
+        cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
 
         img_wrapped = cv2.drawContours(img_contour, [correlation_list[1]], 0, (255, 0, 0), 1)
 
-        cv2.imwrite('../results/pictures/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
-        cv2.imwrite('../results/pictures/wrapped/img_wrapped_{}.jpg'.format(datetime_number), img_wrapped)
+        cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
+        cv2.imwrite('results/pictures/wrapped/img_wrapped_{}.jpg'.format(datetime_number), img_wrapped)
 
         corr_list = correlation_list[2:] 
         return corr_list
@@ -164,6 +161,7 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
         corr_list = None
         return corr_list
 
+# 気泡の検出
 def bubble_position(fname, scales, corr_list, x_origin):
     origin_line = (scales[3] + scales[4]) * 0.5
     scales_left = np.array(scales[0:4])
@@ -199,47 +197,49 @@ if __name__ == "__main__":
             print("\n無効な値です\n")
 
     config = configparser.ConfigParser()
-    config.read("../config/config.ini")
+    config.read("config/config.ini")
     master_txt_path = config.get('path', 'master')
     target_path     = config.get('path', target)
+
+    os.makedirs("results/pictures/bubble", exist_ok=True)
+    os.makedirs("results/pictures/canny", exist_ok=True)
+    os.makedirs("results/pictures/contour", exist_ok=True)
+    os.makedirs("results/pictures/wrapped", exist_ok=True)
+    os.makedirs(target_path, exist_ok=True)
+
+
     target_files    = glob.glob(target_path)
-    csv_files       = glob.glob('../results/data/{}/*.csv'.format(target))
+    csv_files       = glob.glob('results/data/{}/*.csv'.format(target))
 
-    if csv_files == []:
-        target_cnt = None
-        x_origin = None
-        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "bubble_position", "movement", "corr_count"]]
+    target_cnt = None
+    x_origin = None
+    csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "bubble_position", "movement", "corr_count"]]
 
-        for fname in tqdm(target_files): #決め打ち
-            datetime_number, _ = os.path.splitext(os.path.basename(fname))
-            created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
-            img = trimming(fname)
-            identify_scale_list = identify_scale(img, fname)
-            scales = identify_scale_list[0]
-            if fname == target_files[0]:
-                target_cnt, x_origin = identify_bubble(fname, img, identify_scale_list[1])
-                corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, 100)
+    for fname in tqdm(target_files): 
+        datetime_number, _ = os.path.splitext(os.path.basename(fname))
+        created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
+        img = trimming(fname)
+        identify_scale_list = identify_scale(img, fname)
+        scales = identify_scale_list[0]
+        if fname == target_files[0]:
+            target_cnt, x_origin = identify_bubble(fname, img, identify_scale_list[1])
+            corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, 100)
+            position = bubble_position(fname, scales, corr_list, x_origin)
+            csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[0], corr_list[1]]
+            csv_lists.append(csv_list)
+        else:
+            corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, created_datetime.second)
+            if corr_list is not None:
                 position = bubble_position(fname, scales, corr_list, x_origin)
                 csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[0], corr_list[1]]
                 csv_lists.append(csv_list)
-            else:
-                corr_list = cross_correlation(fname, img, identify_scale_list[1], target_cnt, created_datetime.second)
-                if corr_list is not None:
-                    position = bubble_position(fname, scales, corr_list, x_origin)
-                    csv_list = [created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second, position, corr_list[0], corr_list[1]]
-                    csv_lists.append(csv_list)
 
-        dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
-        csv_path = '../results/data/{}/{}.csv'.format(target, dt_now)
-        with open(csv_path, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerows(csv_lists)
+    dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
+    csv_path = 'results/data/{}/{}.csv'.format(target, dt_now)
+    with open(csv_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(csv_lists)
 
-        plot.plot(master_txt_path, csv_path, target)
-
-    else:
-        csv_file = csv_files[-1]
-        plot.plot(master_txt_path, csv_file, target)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

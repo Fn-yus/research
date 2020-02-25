@@ -8,21 +8,22 @@ import os
 import configparser
 import csv
 from tqdm import tqdm
-import plot
 
+# 画像のトリミング
 def trimming(fname):
         img = cv2.imread(fname)
         if "long-needle" in fname.lower():
             img_trimmed = cv2.rotate(img[192:288, 60:565], cv2.ROTATE_180)
-            cv2.imwrite('../results/pictures/needle/img_trimmed.jpg', img_trimmed)
+            cv2.imwrite('results/pictures/needle/img_trimmed.jpg', img_trimmed)
             return img_trimmed
         elif "cross-needle" in fname.lower():
             img_trimmed = img[192:288, 90:535]            
-            cv2.imwrite('../results/pictures/needle/img_trimmed.jpg', img_trimmed)     
+            cv2.imwrite('results/pictures/needle/img_trimmed.jpg', img_trimmed)     
             return img_trimmed
         else:
             pass
 
+# 針の検出
 def extract_needle(img, fname):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) #BGRからHSVに変換
 
@@ -40,9 +41,10 @@ def extract_needle(img, fname):
     img_mask = cv2.bitwise_or(mask1, mask2)               #範囲を指定してマスク画像作成
     img_needle = cv2.bitwise_and(img, img, mask=img_mask) #元画像とマスク画像の共通部分を抽出
 
-    cv2.imwrite('../results/pictures/needle/img_needle.jpg', img_needle)
+    cv2.imwrite('results/pictures/needle/img_needle.jpg', img_needle)
     return img_needle  
 
+# 目盛りの検出
 def identify_scale(img, img_needle, fname):
     img_needle_gray = cv2.cvtColor(img_needle, cv2.COLOR_BGR2GRAY)
     img_needle_denoised = cv2.fastNlMeansDenoising(img_needle_gray)
@@ -122,12 +124,13 @@ def identify_scale(img, img_needle, fname):
     for i in scales:
         cv2.line(img, (Decimal(str(i)).quantize(Decimal("0")), 1000), (Decimal(str(i)).quantize(Decimal("0")), -1000), (0, 255, 0), 1)
 
-    cv2.imwrite('../results/pictures/needle/img.jpg', img)
-    cv2.imwrite('../results/pictures/needle/img_needle_thresh.jpg', img_needle_thresh)
-    cv2.imwrite('../results/pictures/needle/img_thresh.jpg', img_thresh)
+    cv2.imwrite('results/pictures/needle/img.jpg', img)
+    cv2.imwrite('results/pictures/needle/img_needle_thresh.jpg', img_needle_thresh)
+    cv2.imwrite('results/pictures/needle/img_thresh.jpg', img_thresh)
 
     return needle, scales
 
+# 数値化
 def digitalize(needle, scales):
     if needle in scales: #針が目盛りと完全一致した場合
         needle_position = -3 + scales.index(needle)
@@ -176,37 +179,33 @@ if __name__ == "__main__":
             print("\n無効な値です\n")
 
     config = configparser.ConfigParser()
-    config.read("../config/config.ini")
+    config.read("config/config.ini")
     master_txt_path = config.get('path', 'master')
     target_path     = config.get('path', target)
+
+    os.makedirs("results/pictures/needle", exist_ok=True)
+    os.makedirs(target_path, exist_ok=True)
+    
     target_files    = glob.glob(target_path)
-    csv_files       = glob.glob('../results/data/{}/*.csv'.format(target))
+    
+    print("画像を解析しています...")
 
-    if  csv_files == []:
-        print("画像を解析しています...")
-
-        csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
+    csv_lists = [["Year", "Month", "Day", "Hour", "Minute", "Second", "Scale:-3", "Scale:-2", "Scale:-1", "Scale:0", "Scale:1", "Scale:2", "Scale:3", "Needle", "NeedleValue"]]
         
-        for fname in tqdm(target_files):
-            datetime_number, _ = os.path.splitext(os.path.basename(fname))
-            created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
-            img               = trimming(fname)
-            img_needle        = extract_needle(img, fname)
-            identifyscale     = identify_scale(img, img_needle, fname)
-            needle_position   = digitalize(identifyscale[0], identifyscale[1])
-            if needle_position is not None and created_datetime.second >= 10:
-                csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
-                csv_lists.append(csv_list)
+    for fname in tqdm(target_files):
+        datetime_number, _ = os.path.splitext(os.path.basename(fname))
+        created_datetime  = datetime.strptime(str(datetime_number), '%Y%m%d%H%M%S')
+        img               = trimming(fname)
+        img_needle        = extract_needle(img, fname)
+        identifyscale     = identify_scale(img, img_needle, fname)
+        needle_position   = digitalize(identifyscale[0], identifyscale[1])
+        if needle_position is not None and created_datetime.second >= 10:
+            csv_list = sum([[created_datetime.year, created_datetime.month, created_datetime.day, created_datetime.hour, created_datetime.minute, created_datetime.second], identifyscale[1], [identifyscale[0], needle_position]], []) #平坦化している
+            csv_lists.append(csv_list)
         
-        dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
-        csv_path = '../results/data/{}/{}.csv'.format(target, dt_now)
-        with open(csv_path, 'w', newline = '') as f:
-            writer = csv.writer(f)
-            writer.writerows(csv_lists)
-        print("\ncsvファイルが作成されました\nグラフを作成しています...")
-        plot.plot(master_txt_path, csv_path, target)
-
-    else:
-        print("csvファイルが既に存在しています\nグラフを作成しています...")
-        csv_path = csv_files[-1]
-        plot.plot(master_txt_path, csv_path, target)
+    dt_now   = datetime.now().strftime('%Y%m%d%H%M%S')
+    csv_path = '../results/data/{}/{}.csv'.format(target, dt_now)
+    with open(csv_path, 'w', newline = '') as f:
+        writer = csv.writer(f)
+        writer.writerows(csv_lists)
+    print("\ncsvファイルが作成されました\nグラフを作成しています...")
