@@ -148,12 +148,12 @@ def cross_correlation(fname, img_origin, img, origin_cnt, created_datetime_secon
         datetime_number, _ = os.path.splitext(os.path.basename(fname))
 
         img_contour = cv2.drawContours(img_origin, [correlation_list[0]], 0, (0, 0, 255), 2)
-        cv2.imwrite('results/pictures/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
+        cv2.imwrite('results/pictures/bubble/contour/img_contour_{}.jpg'.format(datetime_number), img_contour)
 
         img_wrapped = cv2.drawContours(img_contour, [correlation_list[1]], 0, (255, 0, 0), 1)
 
-        cv2.imwrite('results/pictures/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
-        cv2.imwrite('results/pictures/wrapped/img_wrapped_{}.jpg'.format(datetime_number), img_wrapped)
+        cv2.imwrite('results/pictures/bubble/canny/img_canny_{}.jpg'.format(datetime_number), img_bubble_canny)
+        cv2.imwrite('results/pictures/bubble/wrapped/img_wrapped_{}.jpg'.format(datetime_number), img_wrapped)
 
         corr_list = correlation_list[2:] 
         return corr_list
@@ -201,11 +201,10 @@ if __name__ == "__main__":
     master_txt_path = config.get('path', 'master')
     target_path     = config.get('path', target)
 
-    os.makedirs("results/pictures/bubble", exist_ok=True)
-    os.makedirs("results/pictures/canny", exist_ok=True)
-    os.makedirs("results/pictures/contour", exist_ok=True)
-    os.makedirs("results/pictures/wrapped", exist_ok=True)
-    os.makedirs(target_path, exist_ok=True)
+    os.makedirs("results/pictures/bubble/canny", exist_ok=True)
+    os.makedirs("results/pictures/bubble/contour", exist_ok=True)
+    os.makedirs("results/pictures/bubble/wrapped", exist_ok=True)
+    os.makedirs("results/data/{}".format(target), exist_ok=True)
 
 
     target_files    = glob.glob(target_path)
@@ -239,7 +238,8 @@ if __name__ == "__main__":
     with open(csv_path, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(csv_lists)
-
+    
+    print("\ncsvファイルが作成されました\nグラフを作成しています...")
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
