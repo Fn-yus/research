@@ -205,7 +205,7 @@ if __name__ == "__main__":
     os.makedirs("results/pictures/canny", exist_ok=True)
     os.makedirs("results/pictures/contour", exist_ok=True)
     os.makedirs("results/pictures/wrapped", exist_ok=True)
-    os.makedirs(target_path, exist_ok=True)
+    os.makedirs("results/data/{}".format(target), exist_ok=True)
 
 
     target_files    = glob.glob(target_path)
