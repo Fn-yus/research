@@ -12,10 +12,8 @@
 ```bash
 $ git clone https://github.com/Fn-yus/research.git
 ```
-  
 
-
-### [Create python virtual environment.](https://docs.python.org/ja/3/library/venv.html)
+### (Optional)[Create python virtual environment.](https://docs.python.org/ja/3/library/venv.html)
 
 - Windows
 ```bash
@@ -38,5 +36,14 @@ $ source [environment name]/bin/activate
 $ pip install -r requirements.txt
 ```
 
+### Execute.
+
+```bash
+$ python needle.py
+```
+
+```bash
+$ python bubble.py 
+```
 
 
