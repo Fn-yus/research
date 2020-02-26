@@ -81,10 +81,7 @@ def identify_bubble(fname, img_origin, img):
         img_bubble_canny = cv2.Canny(img, 250, 550)
 
     contours, _ = cv2.findContours(img_bubble_canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    # print(contours)
-    # with open('results/data/bubble/contours.csv', 'w', newline='') as f:
-    #     writer = csv.writer(f)
-    #     writer.writerows(contours)
+
     contours_for_loop = None
 
     if "long-bubble" in fname.lower():
